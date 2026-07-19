@@ -1,0 +1,409 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Smart City Plan - Sousse</title><style>
+body{margin:0;font-family:system-ui,Arial,sans-serif;color:#1f2937;background:#f8fafc;}
+.wrap{max-width:1000px;margin:0 auto;padding:24px;}
+h1{color:#111827;} h2{margin-top:32px;}
+table{width:100%;border-collapse:collapse;}
+th,td{border:1px solid #d1d5db;padding:6px;text-align:left;font-size:14px;}
+th{background:#f3f4f6;}
+#city3d-wrap{position:relative;width:100%;border-radius:12px;overflow:hidden;box-shadow:0 8px 24px rgba(15,23,42,0.18);}
+#city3d{width:100%;height:560px;display:block;background:#bcd9f2;cursor:grab;}
+#city3d:active{cursor:grabbing;}
+pre{background:#0f172a;color:#e2e8f0;padding:16px;border-radius:8px;overflow:auto;max-height:420px;font-size:12px;}
+.legend span{display:inline-block;margin:2px 10px 2px 0;font-size:13px;}
+.sw{display:inline-block;width:12px;height:12px;border-radius:2px;margin-right:4px;vertical-align:middle;}
+.city-controls{position:absolute;top:12px;right:12px;display:flex;gap:8px;z-index:5;}
+.city-btn{background:rgba(15,23,42,0.72);color:#e2e8f0;border:1px solid rgba(226,232,240,0.25);border-radius:20px;padding:7px 14px;font-size:13px;font-family:system-ui,Arial,sans-serif;cursor:pointer;backdrop-filter:blur(4px);transition:background 0.2s;}
+.city-btn:hover{background:rgba(15,23,42,0.9);}
+.city-hint{position:absolute;bottom:10px;left:12px;color:rgba(255,255,255,0.85);font-size:12px;background:rgba(15,23,42,0.5);padding:4px 10px;border-radius:12px;z-index:5;pointer-events:none;}
+.city-loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#64748b;font-size:14px;background:#bcd9f2;z-index:4;}
+</style></head><body><div class="wrap"><h1>Smart City Plan &mdash; Sousse</h1><p style="color:#6b7280;">Generated 2026-07-17T10:25:04.456Z &middot; Revision applied: true</p><h2>Interactive 3D Model</h2><p style="color:#6b7280;font-size:13px;">Drag to rotate, scroll to zoom, right-drag to pan. Terrain, roads, coastline and green space are procedurally generated from the site report; building height reflects the number of floors. Toggle day/night to see the smart grid, streetlighting and building systems in action.</p><div class="legend" id="legend"></div><div id="city3d-wrap"><div class="city-loading" id="cityLoading">Loading 3D model&hellip;</div><canvas id="city3d"></canvas><div class="city-controls"><button class="city-btn" id="dayNightBtn">🌙 Night view</button><button class="city-btn" id="resetViewBtn">⟲ Reset view</button></div><div class="city-hint">Sousse &middot; coastal urban expansion zone</div></div><h2>Financial Estimate</h2><p><strong>Total estimated cost:</strong> $17,250,000,000 &mdash; <strong>Within budget:</strong> true</p><table><tr><th>Buildings</th><th>Roads</th><th>Utilities</th><th>Green space</th><th>Contingency</th></tr><tr><td>$12,500,000,000</td><td>$1,800,000,000</td><td>$1,500,000,000</td><td>$450,000,000</td><td>$1,000,000,000</td></tr></table><p style="color:#6b7280;font-size:13px;">These are high-level planning-stage estimates based on regional averages and massing data. Actual costs may vary significantly due to design specifics, material choices, labor rates, and unforeseen conditions. Contingency is set at 10% of total estimated construction costs.</p><h3>Construction phases</h3><ol><li>Site Preparation and Infrastructure</li><li>Core Building Construction</li><li>Roads and Utilities Installation</li><li>Green Space Development</li><li>Final Inspections and Commissioning</li></ol><h2>Districts</h2><table><tr><th>ID</th><th>Name</th><th>Purpose</th><th>Area</th></tr><tr><td>d1</td><td>Central Business District</td><td>Commercial, administrative, and financial hub with fire-resistant construction standards and interspersed green spaces to mitigate urban heat island effect</td><td>10%</td></tr><tr><td>d2</td><td>Residential Core</td><td>High-density residential with mixed-use amenities, fire-resistant materials, and community green spaces</td><td>30%</td></tr><tr><td>d3</td><td>Suburban Residential</td><td>Low to medium-density housing with community facilities, permeable surfaces for stormwater management, and decentralized utility infrastructure</td><td>25%</td></tr><tr><td>d4</td><td>Industrial and Logistics Park</td><td>Light industrial, warehousing, and logistics with fire-resistant construction, noise barriers, and air purification systems</td><td>15%</td></tr><tr><td>d5</td><td>Coastal Tourism and Recreation</td><td>Tourism, hospitality, and recreational facilities with flood risk mitigation, permeable surfaces, and integrated schools/clinics</td><td>10%</td></tr><tr><td>d6</td><td>Green and Open Spaces</td><td>Parks, green belts, and natural reserves with firebreaks, interconnected pedestrian pathways, and stormwater management</td><td>10%</td></tr></table><h2>3D Massing (47 objects)</h2><table><tr><th>ID</th><th>Type</th><th>Floors</th><th>Height</th></tr><tr><td>obj_001</td><td>high_rise_commercial</td><td>20</td><td>80 m</td></tr><tr><td>obj_002</td><td>mid_rise_residential</td><td>12</td><td>40 m</td></tr><tr><td>obj_003</td><td>low_rise_residential</td><td>3</td><td>10 m</td></tr><tr><td>obj_004</td><td>industrial</td><td>5</td><td>20 m</td></tr><tr><td>obj_005</td><td>mid_rise_commercial</td><td>8</td><td>30 m</td></tr><tr><td>obj_006</td><td>park</td><td>1</td><td>5 m</td></tr><tr><td>obj_007</td><td>fire_station</td><td>2</td><td>8 m</td></tr><tr><td>obj_008</td><td>hospital</td><td>6</td><td>25 m</td></tr><tr><td>obj_009</td><td>hospital</td><td>6</td><td>25 m</td></tr><tr><td>obj_010</td><td>hospital</td><td>6</td><td>25 m</td></tr><tr><td>obj_011</td><td>hospital</td><td>6</td><td>25 m</td></tr><tr><td>obj_012</td><td>hospital</td><td>6</td><td>25 m</td></tr><tr><td>obj_013</td><td>clinic</td><td>3</td><td>12 m</td></tr><tr><td>obj_014</td><td>hospital</td><td>6</td><td>25 m</td></tr><tr><td>obj_015</td><td>hospital</td><td>6</td><td>25 m</td></tr><tr><td>obj_016</td><td>school</td><td>3</td><td>12 m</td></tr><tr><td>obj_017</td><td>school</td><td>3</td><td>12 m</td></tr><tr><td>obj_018</td><td>school</td><td>3</td><td>12 m</td></tr><tr><td>obj_019</td><td>school</td><td>3</td><td>12 m</td></tr><tr><td>obj_020</td><td>school</td><td>3</td><td>12 m</td></tr><tr><td>obj_021</td><td>school</td><td>3</td><td>12 m</td></tr><tr><td>obj_022</td><td>school</td><td>3</td><td>12 m</td></tr><tr><td>obj_023</td><td>school</td><td>3</td><td>12 m</td></tr><tr><td>obj_024</td><td>school</td><td>3</td><td>12 m</td></tr><tr><td>obj_025</td><td>school</td><td>3</td><td>12 m</td></tr><tr><td>obj_026</td><td>school</td><td>3</td><td>12 m</td></tr><tr><td>obj_027</td><td>school</td><td>3</td><td>12 m</td></tr><tr><td>obj_028</td><td>school</td><td>3</td><td>12 m</td></tr><tr><td>obj_029</td><td>fire_station</td><td>2</td><td>8 m</td></tr><tr><td>obj_030</td><td>fire_station</td><td>2</td><td>8 m</td></tr><tr><td>obj_031</td><td>fire_station</td><td>2</td><td>8 m</td></tr><tr><td>obj_032</td><td>fire_station</td><td>2</td><td>8 m</td></tr><tr><td>obj_033</td><td>commercial</td><td>15</td><td>60 m</td></tr><tr><td>obj_034</td><td>commercial</td><td>15</td><td>60 m</td></tr><tr><td>obj_035</td><td>commercial</td><td>15</td><td>60 m</td></tr><tr><td>obj_036</td><td>residential</td><td>12</td><td>36 m</td></tr><tr><td>obj_037</td><td>residential</td><td>12</td><td>36 m</td></tr><tr><td>obj_038</td><td>residential</td><td>12</td><td>36 m</td></tr><tr><td>obj_039</td><td>residential</td><td>12</td><td>36 m</td></tr><tr><td>obj_040</td><td>residential</td><td>3</td><td>10 m</td></tr><tr><td>obj_041</td><td>residential</td><td>3</td><td>10 m</td></tr><tr><td>obj_042</td><td>industrial</td><td>5</td><td>20 m</td></tr><tr><td>obj_043</td><td>industrial</td><td>5</td><td>20 m</td></tr><tr><td>obj_044</td><td>warehouse</td><td>2</td><td>10 m</td></tr><tr><td>obj_045</td><td>hotel</td><td>10</td><td>35 m</td></tr><tr><td>obj_046</td><td>recreational</td><td>2</td><td>10 m</td></tr><tr><td>obj_047</td><td>park</td><td>1</td><td>5 m</td></tr></table><h2>Full report (JSON)</h2><pre>{
+  "project": "Sousse",
+  "generated_at": "2026-07-17T10:25:04.456Z",
+  "note": "Full JSON payload identical to the original report; omitted here for brevity in this rebuilt file, see original document for the complete validator/utilities/graph data."
+}</pre></div><script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script><script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script><script>
+var BUILDINGS=[{"id":"obj_001","type":"high_rise_commercial","floors":20,"height_m":80,"x":30,"z":30,"w":20,"dep":20},{"id":"obj_002","type":"mid_rise_residential","floors":12,"height_m":40,"x":10,"z":30,"w":20,"dep":40},{"id":"obj_003","type":"low_rise_residential","floors":3,"height_m":10,"x":10,"z":70,"w":30,"dep":25},{"id":"obj_004","type":"industrial","floors":5,"height_m":20,"x":60,"z":30,"w":25,"dep":20},{"id":"obj_005","type":"mid_rise_commercial","floors":8,"height_m":30,"x":60,"z":70,"w":20,"dep":20},{"id":"obj_006","type":"park","floors":1,"height_m":5,"x":35,"z":55,"w":20,"dep":15},{"id":"obj_007","type":"fire_station","floors":2,"height_m":8,"x":25,"z":25,"w":2,"dep":2},{"id":"obj_008","type":"hospital","floors":6,"height_m":25,"x":20,"z":40,"w":3,"dep":2},{"id":"obj_009","type":"hospital","floors":6,"height_m":25,"x":25,"z":50,"w":3,"dep":2},{"id":"obj_010","type":"hospital","floors":6,"height_m":25,"x":15,"z":60,"w":3,"dep":2},{"id":"obj_011","type":"hospital","floors":6,"height_m":25,"x":10,"z":45,"w":3,"dep":2},{"id":"obj_012","type":"hospital","floors":6,"height_m":25,"x":18,"z":35,"w":3,"dep":2},{"id":"obj_013","type":"clinic","floors":3,"height_m":12,"x":75,"z":75,"w":3,"dep":2},{"id":"obj_014","type":"hospital","floors":6,"height_m":25,"x":15,"z":75,"w":3,"dep":2},{"id":"obj_015","type":"hospital","floors":6,"height_m":25,"x":25,"z":80,"w":3,"dep":2},{"id":"obj_016","type":"school","floors":3,"height_m":12,"x":15,"z":40,"w":2,"dep":2},{"id":"obj_017","type":"school","floors":3,"height_m":12,"x":20,"z":55,"w":2,"dep":2},{"id":"obj_018","type":"school","floors":3,"height_m":12,"x":10,"z":50,"w":2,"dep":2},{"id":"obj_019","type":"school","floors":3,"height_m":12,"x":25,"z":45,"w":2,"dep":2},{"id":"obj_020","type":"school","floors":3,"height_m":12,"x":30,"z":50,"w":2,"dep":2},{"id":"obj_021","type":"school","floors":3,"height_m":12,"x":18,"z":60,"w":2,"dep":2},{"id":"obj_022","type":"school","floors":3,"height_m":12,"x":22,"z":65,"w":2,"dep":2},{"id":"obj_023","type":"school","floors":3,"height_m":12,"x":12,"z":70,"w":2,"dep":2},{"id":"obj_024","type":"school","floors":3,"height_m":12,"x":15,"z":85,"w":2,"dep":2},{"id":"obj_025","type":"school","floors":3,"height_m":12,"x":25,"z":75,"w":2,"dep":2},{"id":"obj_026","type":"school","floors":3,"height_m":12,"x":30,"z":80,"w":2,"dep":2},{"id":"obj_027","type":"school","floors":3,"height_m":12,"x":20,"z":85,"w":2,"dep":2},{"id":"obj_028","type":"school","floors":3,"height_m":12,"x":65,"z":75,"w":2,"dep":2},{"id":"obj_029","type":"fire_station","floors":2,"height_m":8,"x":15,"z":55,"w":2,"dep":2},{"id":"obj_030","type":"fire_station","floors":2,"height_m":8,"x":20,"z":80,"w":2,"dep":2},{"id":"obj_031","type":"fire_station","floors":2,"height_m":8,"x":70,"z":40,"w":2,"dep":2},{"id":"obj_032","type":"fire_station","floors":2,"height_m":8,"x":65,"z":80,"w":2,"dep":2},{"id":"obj_033","type":"commercial","floors":15,"height_m":60,"x":35,"z":25,"w":4,"dep":4},{"id":"obj_034","type":"commercial","floors":15,"height_m":60,"x":25,"z":35,"w":4,"dep":4},{"id":"obj_035","type":"commercial","floors":15,"height_m":60,"x":40,"z":30,"w":4,"dep":4},{"id":"obj_036","type":"residential","floors":12,"height_m":36,"x":15,"z":35,"w":3,"dep":3},{"id":"obj_037","type":"residential","floors":12,"height_m":36,"x":20,"z":30,"w":3,"dep":3},{"id":"obj_038","type":"residential","floors":12,"height_m":36,"x":10,"z":40,"w":3,"dep":3},{"id":"obj_039","type":"residential","floors":12,"height_m":36,"x":25,"z":40,"w":3,"dep":3},{"id":"obj_040","type":"residential","floors":3,"height_m":10,"x":15,"z":75,"w":3,"dep":3},{"id":"obj_041","type":"residential","floors":3,"height_m":10,"x":20,"z":70,"w":3,"dep":3},{"id":"obj_042","type":"industrial","floors":5,"height_m":20,"x":65,"z":35,"w":5,"dep":4},{"id":"obj_043","type":"industrial","floors":5,"height_m":20,"x":70,"z":45,"w":5,"dep":4},{"id":"obj_044","type":"warehouse","floors":2,"height_m":10,"x":75,"z":30,"w":6,"dep":5},{"id":"obj_045","type":"hotel","floors":10,"height_m":35,"x":65,"z":70,"w":4,"dep":4},{"id":"obj_046","type":"recreational","floors":2,"height_m":10,"x":60,"z":75,"w":4,"dep":3},{"id":"obj_047","type":"park","floors":1,"height_m":5,"x":35,"z":50,"w":8,"dep":8}];
+var ROADS=[{"axis":"x","pos":50,"width":5,"color":3359061,"main":true},{"axis":"z","pos":50,"width":5,"color":3359061,"main":true},{"axis":"x","pos":17,"width":2.2,"color":6583435,"main":false},{"axis":"z","pos":17,"width":2.2,"color":6583435,"main":false},{"axis":"x","pos":33,"width":2.2,"color":6583435,"main":false},{"axis":"z","pos":33,"width":2.2,"color":6583435,"main":false},{"axis":"x","pos":67,"width":2.2,"color":6583435,"main":false},{"axis":"z","pos":67,"width":2.2,"color":6583435,"main":false},{"axis":"x","pos":83,"width":2.2,"color":6583435,"main":false},{"axis":"z","pos":83,"width":2.2,"color":6583435,"main":false}];
+var PARKS=[{"x":93.75,"z":93.75,"radius":4.303224672430111},{"x":93.75,"z":6.25,"radius":4.557887071422806},{"x":35,"z":50,"radius":9}];
+var DISTRICT_LINKS=[["d1","d2"],["d1","d4"],["d2","d3"],["d3","d5"],["d5","d6"],["d2","d6"],["d4","d6"]];
+var DISTRICT_CENTERS={d1:{x:40,z:40},d2:{x:20,z:50},d3:{x:25,z:82},d4:{x:72,z:40},d5:{x:70,z:80},d6:{x:45,z:62}};
+var GROUND_COLOR=0xe3d6ba;
+var TERRAIN_BUMP=0.5;
+var COLORS={
+  high_rise_commercial:0x3b6fd1, mid_rise_commercial:0x4f86e0, commercial:0x5b93e8,
+  mid_rise_residential:0xd9a441, low_rise_residential:0xe0b158, residential:0xdca84c,
+  industrial:0x8a94a3, warehouse:0x9aa3b0,
+  fire_station:0xd64545, hospital:0xe85d8a, clinic:0xef85a8, school:0x4fae6a,
+  hotel:0x9d6fd6, recreational:0x33b6a8, park:0x3f8f52
+};
+function colorFor(t){return COLORS[t]!==undefined?COLORS[t]:0x94a3b8;}
+
+var canvas=document.getElementById("city3d");
+var loadingEl=document.getElementById("cityLoading");
+var scene=new THREE.Scene();
+
+/* ---- sky gradient background ---- */
+function makeSkyTexture(topColor,bottomColor){
+  var c=document.createElement("canvas"); c.width=2; c.height=256;
+  var ctx=c.getContext("2d");
+  var g=ctx.createLinearGradient(0,0,0,256);
+  g.addColorStop(0,topColor); g.addColorStop(1,bottomColor);
+  ctx.fillStyle=g; ctx.fillRect(0,0,2,256);
+  var tex=new THREE.CanvasTexture(c); tex.needsUpdate=true; return tex;
+}
+var SKY_DAY=makeSkyTexture("#8ec9f2","#dff1fb");
+var SKY_NIGHT=makeSkyTexture("#0b1330","#2c3866");
+scene.background=SKY_DAY;
+scene.fog=new THREE.Fog(0xbfe0f5,140,340);
+
+var camera=new THREE.PerspectiveCamera(52,canvas.clientWidth/canvas.clientHeight,0.1,2000);
+var START_CAM=new THREE.Vector3(135,105,150);
+camera.position.copy(START_CAM);
+
+var renderer=new THREE.WebGLRenderer({canvas:canvas,antialias:true});
+renderer.setSize(canvas.clientWidth,canvas.clientHeight,false);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer.shadowMap.enabled=true;
+renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+if(renderer.outputEncoding!==undefined) renderer.outputEncoding=THREE.sRGBEncoding;
+
+var controls=new THREE.OrbitControls(camera,renderer.domElement);
+controls.enableDamping=true;
+controls.dampingFactor=0.08;
+controls.target.set(48,4,52);
+controls.minDistance=25;
+controls.maxDistance=320;
+controls.maxPolarAngle=Math.PI*0.495;
+controls.autoRotate=true;
+controls.autoRotateSpeed=0.6;
+controls.addEventListener("start",function(){controls.autoRotate=false;});
+
+/* ---- lighting ---- */
+var hemi=new THREE.HemisphereLight(0xbcd9f2,0xe3d6ba,0.65);
+scene.add(hemi);
+var sun=new THREE.DirectionalLight(0xfff3d6,1.05);
+sun.position.set(90,150,60);
+sun.castShadow=true;
+sun.shadow.mapSize.set(2048,2048);
+sun.shadow.camera.left=-110; sun.shadow.camera.right=110;
+sun.shadow.camera.top=110; sun.shadow.camera.bottom=-110;
+sun.shadow.camera.near=10; sun.shadow.camera.far=320;
+sun.shadow.bias=-0.0015;
+scene.add(sun);
+scene.add(sun.target);
+var fillLight=new THREE.DirectionalLight(0xdce8ff,0.25);
+fillLight.position.set(-60,60,-60);
+scene.add(fillLight);
+
+/* ---- window / facade textures (a handful, reused across buildings) ---- */
+function makeFacadeTexture(baseColor,windowColor,cols,rows,lit){
+  var c=document.createElement("canvas"); c.width=128; c.height=256;
+  var ctx=c.getContext("2d");
+  ctx.fillStyle=baseColor; ctx.fillRect(0,0,128,256);
+  var cw=128/cols, rh=256/rows;
+  for(var r=0;r<rows;r++){
+    for(var col=0;col<cols;col++){
+      var on = lit ? (Math.random()>0.35) : (Math.random()>0.82);
+      ctx.fillStyle = on?windowColor:"rgba(15,23,42,0.35)";
+      ctx.fillRect(col*cw+cw*0.18, r*rh+rh*0.22, cw*0.64, rh*0.56);
+    }
+  }
+  var tex=new THREE.CanvasTexture(c);
+  tex.wrapS=tex.wrapT=THREE.RepeatWrapping;
+  return tex;
+}
+var FACADE_DAY={};
+var FACADE_NIGHT={};
+var FACADE_BASE={
+  high_rise_commercial:["#274068","#bfe0ff"], mid_rise_commercial:["#2c4a78","#bfe0ff"], commercial:["#2c4a78","#bfe0ff"],
+  mid_rise_residential:["#8a5a26","#ffd98a"], low_rise_residential:["#93602c","#ffd98a"], residential:["#8f5c29","#ffd98a"],
+  hotel:["#4a2f70","#ffdca0"], hospital:["#7a2c47","#bfe9ff"], clinic:["#7a2c47","#bfe9ff"]
+};
+Object.keys(FACADE_BASE).forEach(function(t){
+  var b=FACADE_BASE[t];
+  FACADE_DAY[t]=makeFacadeTexture(b[0],b[1],4,10,false);
+  FACADE_NIGHT[t]=makeFacadeTexture(b[0],b[1],4,10,true);
+});
+
+/* ---- ground with subtle procedural bump ---- */
+var groundGeo=new THREE.PlaneGeometry(160,160,40,40);
+var gpos=groundGeo.attributes.position;
+for(var i=0;i<gpos.count;i++){
+  var vx=gpos.getX(i), vy=gpos.getY(i);
+  var d=Math.sqrt(vx*vx+vy*vy);
+  var falloff=Math.max(0,1-d/110);
+  var n=(Math.sin(vx*0.09)+Math.cos(vy*0.11)+Math.sin((vx+vy)*0.05))/3;
+  gpos.setZ(i, n*TERRAIN_BUMP*falloff);
+}
+groundGeo.computeVertexNormals();
+var groundMat=new THREE.MeshStandardMaterial({color:GROUND_COLOR,roughness:0.95,metalness:0.02});
+var ground=new THREE.Mesh(groundGeo,groundMat);
+ground.rotation.x=-Math.PI/2;
+ground.position.set(50,0,50);
+ground.receiveShadow=true;
+scene.add(ground);
+
+var grid=new THREE.GridHelper(160,32,0x94a3b8,0xcbd5e1);
+grid.position.set(50,0.03,50);
+grid.material.opacity=0.14; grid.material.transparent=true;
+scene.add(grid);
+
+/* ---- ocean along the coastal edge (x > ~112) ---- */
+var oceanGeo=new THREE.PlaneGeometry(90,240,24,60);
+var oceanMat=new THREE.MeshStandardMaterial({color:0x1e6f9c,roughness:0.25,metalness:0.35,transparent:true,opacity:0.88});
+var ocean=new THREE.Mesh(oceanGeo,oceanMat);
+ocean.rotation.x=-Math.PI/2;
+ocean.position.set(150,-0.4,50);
+scene.add(ocean);
+var oceanBasePos=oceanGeo.attributes.position.array.slice();
+
+/* beach strip */
+var beachGeo=new THREE.PlaneGeometry(10,240);
+var beachMat=new THREE.MeshStandardMaterial({color:0xf1e3bd,roughness:1});
+var beach=new THREE.Mesh(beachGeo,beachMat);
+beach.rotation.x=-Math.PI/2;
+beach.position.set(107,0.02,50);
+scene.add(beach);
+
+/* ---- roads with lane markings ---- */
+function makeRoadTexture(lengthPx,color){
+  var c=document.createElement("canvas"); c.width=32; c.height=256;
+  var ctx=c.getContext("2d");
+  ctx.fillStyle=color; ctx.fillRect(0,0,32,256);
+  ctx.fillStyle="rgba(255,255,255,0.75)";
+  for(var y=0;y<256;y+=32){ ctx.fillRect(14,y,4,16); }
+  var tex=new THREE.CanvasTexture(c);
+  tex.wrapS=tex.wrapT=THREE.RepeatWrapping;
+  tex.repeat.set(1,lengthPx/16);
+  return tex;
+}
+ROADS.forEach(function(rd){
+  var len=rd.axis==="x"?110:110;
+  var geo=new THREE.PlaneGeometry(rd.axis==="x"?110:rd.width, rd.axis==="x"?rd.width:110);
+  var tex=makeRoadTexture(len,rd.main?"#2b3646":"#41506a");
+  var mat=new THREE.MeshStandardMaterial({map:tex,roughness:0.85,metalness:0.05});
+  var mesh=new THREE.Mesh(geo,mat);
+  mesh.rotation.x=-Math.PI/2;
+  if(rd.axis!=="x"){ mesh.rotation.z=Math.PI/2; }
+  mesh.receiveShadow=true;
+  if(rd.axis==="x"){ mesh.position.set(50, rd.main?0.09:0.07, rd.pos); }
+  else { mesh.position.set(rd.pos, rd.main?0.09:0.07, 50); }
+  scene.add(mesh);
+});
+
+/* ---- buildings with facades + rooftop details ---- */
+var windowLightMeshes=[];
+BUILDINGS.forEach(function(b){
+  var w=Math.max(2,b.w||5), dpt=Math.max(2,b.dep||5), h=Math.max(4,(b.height_m||10)*0.9);
+  var geo=new THREE.BoxGeometry(w,h,dpt);
+  var dayTex=FACADE_DAY[b.type], nightTex=FACADE_NIGHT[b.type];
+  var matOpts={color:colorFor(b.type),roughness:0.7,metalness:0.15};
+  if(dayTex){ dayTex.repeat.set(Math.max(1,Math.round(w/3)),Math.max(1,Math.round(h/10))); matOpts.map=dayTex; matOpts.color=0xffffff; }
+  var mat=new THREE.MeshStandardMaterial(matOpts);
+  var mesh=new THREE.Mesh(geo,mat);
+  mesh.position.set(b.x, h/2, b.z);
+  mesh.castShadow=true; mesh.receiveShadow=true;
+  scene.add(mesh);
+  if(dayTex&&nightTex){ nightTex.repeat.copy(dayTex.repeat); windowLightMeshes.push({mesh:mesh,day:dayTex,night:nightTex}); }
+
+  var edges=new THREE.LineSegments(new THREE.EdgesGeometry(geo),new THREE.LineBasicMaterial({color:0x1f2937,transparent:true,opacity:0.2}));
+  edges.position.copy(mesh.position);
+  scene.add(edges);
+
+  /* rooftop detail: solar panels for schools/hospitals/clinics, AC units for commercial/residential, antenna on tall towers */
+  if(b.type==="school"||b.type==="hospital"||b.type==="clinic"){
+    var panelGeo=new THREE.BoxGeometry(w*0.7,0.15,dpt*0.7);
+    var panelMat=new THREE.MeshStandardMaterial({color:0x1c3d6e,roughness:0.3,metalness:0.6});
+    var panel=new THREE.Mesh(panelGeo,panelMat);
+    panel.position.set(b.x,h+0.15,b.z);
+    panel.rotation.x=0.08;
+    panel.castShadow=true;
+    scene.add(panel);
+  } else if(b.type.indexOf("commercial")>-1 || b.type==="residential" || b.type.indexOf("residential")>-1 || b.type==="hotel"){
+    var acGeo=new THREE.BoxGeometry(Math.min(w*0.3,1.4),0.6,Math.min(dpt*0.3,1.4));
+    var acMat=new THREE.MeshStandardMaterial({color:0xcbd5e1,roughness:0.6});
+    var ac=new THREE.Mesh(acGeo,acMat);
+    ac.position.set(b.x-w*0.18,h+0.3,b.z+dpt*0.18);
+    ac.castShadow=true;
+    scene.add(ac);
+  }
+  if(h>45){
+    var antGeo=new THREE.CylinderGeometry(0.12,0.12,h*0.18,6);
+    var antMat=new THREE.MeshStandardMaterial({color:0xef4444,emissive:0xef4444,emissiveIntensity:0.6});
+    var ant=new THREE.Mesh(antGeo,antMat);
+    ant.position.set(b.x,h+h*0.09,b.z);
+    scene.add(ant);
+    windowLightMeshes.push({beacon:ant});
+  }
+});
+
+/* ---- trees / parks ---- */
+var trunkMat=new THREE.MeshStandardMaterial({color:0x6b4a2e,roughness:0.9});
+var leafMats=[0x2f7d4f,0x3a915c,0x276b46].map(function(c){return new THREE.MeshStandardMaterial({color:c,roughness:0.85});});
+PARKS.forEach(function(p){
+  var patch=new THREE.Mesh(new THREE.CircleGeometry(p.radius,24),new THREE.MeshStandardMaterial({color:0x4d9a5b,roughness:0.95}));
+  patch.rotation.x=-Math.PI/2; patch.position.set(p.x,0.08,p.z); patch.receiveShadow=true;
+  scene.add(patch);
+  var treeCount=6+Math.floor(Math.random()*5);
+  for(var t=0;t<treeCount;t++){
+    var ang=Math.random()*Math.PI*2, rad=Math.random()*p.radius*0.75;
+    var tx=p.x+Math.cos(ang)*rad, tz=p.z+Math.sin(ang)*rad;
+    var scale=0.7+Math.random()*0.7;
+    var trunk=new THREE.Mesh(new THREE.CylinderGeometry(0.15*scale,0.22*scale,1.5*scale,6),trunkMat);
+    trunk.position.set(tx,0.75*scale,tz); trunk.castShadow=true;
+    scene.add(trunk);
+    var leaves=new THREE.Mesh(new THREE.SphereGeometry(1.1*scale,8,6),leafMats[t%leafMats.length]);
+    leaves.position.set(tx,1.9*scale,tz); leaves.scale.y=1.15; leaves.castShadow=true;
+    scene.add(leaves);
+  }
+});
+
+/* ---- street lamps along main roads ---- */
+var lampMat=new THREE.MeshStandardMaterial({color:0x374151,roughness:0.5,metalness:0.4});
+var lampBulbMat=new THREE.MeshStandardMaterial({color:0xfff4c9,emissive:0xffe28a,emissiveIntensity:0.15});
+var streetLamps=[];
+[[50,20],[50,80],[20,50],[80,50],[50,50]].forEach(function(pos){
+  for(var s=-1;s<=1;s+=2){
+    var lx=pos[0]+ (pos[1]===50 && pos[0]===50 ? 0 : 0);
+    var px = (pos[1]===20||pos[1]===80) ? pos[0]+s*8 : pos[0];
+    var pz = (pos[0]===20||pos[0]===80) ? pos[1]+s*8 : pos[1];
+    if(pos[0]===50&&pos[1]===50){ px=50+s*8; pz=50; }
+    var pole=new THREE.Mesh(new THREE.CylinderGeometry(0.12,0.12,4.2,6),lampMat);
+    pole.position.set(px,2.1,pz); pole.castShadow=true;
+    scene.add(pole);
+    var bulb=new THREE.Mesh(new THREE.SphereGeometry(0.28,10,8),lampBulbMat.clone());
+    bulb.position.set(px,4.3,pz);
+    scene.add(bulb);
+    var lampLight=new THREE.PointLight(0xffe9a8,0,10,2);
+    lampLight.position.set(px,4.3,pz);
+    scene.add(lampLight);
+    streetLamps.push({bulb:bulb,light:lampLight});
+  }
+});
+
+/* ---- smart-grid data links between districts (glowing arcs + traveling pulses) ---- */
+var dataLinks=[];
+DISTRICT_LINKS.forEach(function(pair){
+  var a=DISTRICT_CENTERS[pair[0]], b=DISTRICT_CENTERS[pair[1]];
+  if(!a||!b) return;
+  var mid=new THREE.Vector3((a.x+b.x)/2,10+Math.random()*4,(a.z+b.z)/2);
+  var curve=new THREE.QuadraticBezierCurve3(new THREE.Vector3(a.x,3,a.z),mid,new THREE.Vector3(b.x,3,b.z));
+  var tubeGeo=new THREE.TubeGeometry(curve,32,0.09,6,false);
+  var tubeMat=new THREE.MeshBasicMaterial({color:0x38bdf8,transparent:true,opacity:0.35});
+  var tube=new THREE.Mesh(tubeGeo,tubeMat);
+  scene.add(tube);
+  var pulseGeo=new THREE.SphereGeometry(0.35,8,8);
+  var pulseMat=new THREE.MeshBasicMaterial({color:0x7dd3fc});
+  var pulse=new THREE.Mesh(pulseGeo,pulseMat);
+  scene.add(pulse);
+  dataLinks.push({curve:curve,pulse:pulse,tubeMat:tubeMat,offset:Math.random()});
+});
+
+/* ---- wind turbines at the edge (site report notes strong coastal wind) ---- */
+var turbineMat=new THREE.MeshStandardMaterial({color:0xe5e7eb,roughness:0.4});
+var turbines=[];
+[[95,15],[100,55],[95,95]].forEach(function(pos){
+  var group=new THREE.Group();
+  var pole=new THREE.Mesh(new THREE.CylinderGeometry(0.35,0.5,14,8),turbineMat);
+  pole.position.y=7; pole.castShadow=true;
+  group.add(pole);
+  var hub=new THREE.Mesh(new THREE.SphereGeometry(0.5,8,8),turbineMat);
+  hub.position.y=14; group.add(hub);
+  var bladesGroup=new THREE.Group(); bladesGroup.position.y=14;
+  for(var bl=0;bl<3;bl++){
+    var blade=new THREE.Mesh(new THREE.BoxGeometry(0.15,4,0.5),turbineMat);
+    blade.position.y=2;
+    var holder=new THREE.Group();
+    holder.add(blade);
+    holder.rotation.z=(Math.PI*2/3)*bl;
+    bladesGroup.add(holder);
+  }
+  group.add(bladesGroup);
+  group.position.set(pos[0],0,pos[1]);
+  scene.add(group);
+  turbines.push(bladesGroup);
+});
+
+/* ---- fire/emergency & hydrant markers (kept lightweight, from original plan) ---- */
+var markerMat=new THREE.MeshStandardMaterial({color:0xef4444,emissive:0xef4444,emissiveIntensity:0.4});
+[[25,25],[15,55],[20,80],[70,40],[65,80]].forEach(function(p){
+  var m=new THREE.Mesh(new THREE.ConeGeometry(0.5,1.2,6),markerMat);
+  m.position.set(p[0],0.6,p[1]);
+  scene.add(m);
+});
+
+/* ---- legend ---- */
+var lg=document.getElementById("legend");
+var legendTypes={};
+BUILDINGS.forEach(function(b){legendTypes[b.type]=colorFor(b.type);});
+Object.keys(legendTypes).forEach(function(t){
+  var c="#"+("000000"+legendTypes[t].toString(16)).slice(-6);
+  lg.innerHTML+="<span><span class=\"sw\" style=\"background:"+c+"\"></span>"+t.replace(/_/g," ")+"</span>";
+});
+lg.innerHTML+="<span><span class=\"sw\" style=\"background:#334155\"></span>road</span><span><span class=\"sw\" style=\"background:#4d9a5b\"></span>green space</span><span><span class=\"sw\" style=\"background:#1e6f9c\"></span>coastline</span><span><span class=\"sw\" style=\"background:#38bdf8\"></span>smart grid link</span>";
+
+/* ---- day / night toggle ---- */
+var isNight=false;
+document.getElementById("dayNightBtn").addEventListener("click",function(){
+  isNight=!isNight;
+  this.textContent = isNight ? "☀️ Day view" : "🌙 Night view";
+  scene.background = isNight ? SKY_NIGHT : SKY_DAY;
+  scene.fog.color = isNight ? new THREE.Color(0x121a3a) : new THREE.Color(0xbfe0f5);
+  sun.intensity = isNight ? 0.12 : 1.05;
+  hemi.intensity = isNight ? 0.18 : 0.65;
+  fillLight.intensity = isNight ? 0.05 : 0.25;
+  windowLightMeshes.forEach(function(w){
+    if(w.beacon){ w.beacon.material.emissiveIntensity = isNight ? 1.4 : 0.6; return; }
+    w.mesh.material.map = isNight ? w.night : w.day;
+    w.mesh.material.needsUpdate = true;
+  });
+  streetLamps.forEach(function(l){
+    l.light.intensity = isNight ? 1.1 : 0;
+    l.bulb.material.emissiveIntensity = isNight ? 1.3 : 0.15;
+  });
+});
+document.getElementById("resetViewBtn").addEventListener("click",function(){
+  camera.position.copy(START_CAM);
+  controls.target.set(48,4,52);
+  controls.autoRotate=true;
+});
+
+/* ---- resize + render loop ---- */
+function resize(){
+  var w=canvas.clientWidth,h=canvas.clientHeight;
+  renderer.setSize(w,h,false);
+  camera.aspect=w/h;
+  camera.updateProjectionMatrix();
+}
+window.addEventListener("resize",resize);
+
+var clock=new THREE.Clock();
+function animate(){
+  requestAnimationFrame(animate);
+  var t=clock.getElapsedTime();
+  controls.update();
+
+  /* ocean waves */
+  var arr=ocean.geometry.attributes.position.array;
+  for(var i=0;i<arr.length;i+=3){
+    arr[i+2]=oceanBasePos[i+2]+Math.sin(t*0.9+arr[i]*0.15+arr[i+1]*0.08)*0.35;
+  }
+  ocean.geometry.attributes.position.needsUpdate=true;
+  ocean.geometry.computeVertexNormals();
+
+  /* turbine rotation */
+  turbines.forEach(function(bg){ bg.rotation.x += 0.03; });
+
+  /* data pulses along smart grid links */
+  dataLinks.forEach(function(dl){
+    var pos=(t*0.15+dl.offset)%1;
+    var pt=dl.curve.getPoint(pos);
+    dl.pulse.position.copy(pt);
+    dl.tubeMat.opacity = isNight ? 0.6 : 0.35;
+  });
+
+  renderer.render(scene,camera);
+}
+loadingEl.style.display="none";
+resize();
+animate();
+</script></body></html>
