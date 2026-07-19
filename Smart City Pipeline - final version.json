@@ -1,0 +1,1521 @@
+{
+  "name": "Smart City Pipeline - final version",
+  "nodes": [
+    {
+      "parameters": {},
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1040,
+        352
+      ],
+      "id": "37a93262-7230-45cf-88a8-cfbc05911530"
+    },
+    {
+      "parameters": {},
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1040,
+        352
+      ],
+      "id": "499fd8f4-be83-4732-8297-10fa4e86f427"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "21e5a2f4-e0cc-4dbb-868d-ff043979839f",
+              "name": "latitude",
+              "type": "number",
+              "value": "={{ $json['Latitude'] }}"
+            },
+            {
+              "id": "d5c5c47b-d767-48ad-aa14-0ef155a8c92b",
+              "name": "longitude",
+              "type": "number",
+              "value": "={{ $json['Longitude'] }}"
+            },
+            {
+              "id": "aa9e8ecc-5617-49a4-b576-2102c8444bef",
+              "name": "region_name",
+              "type": "string",
+              "value": "={{ $json['Region name'] }}"
+            },
+            {
+              "id": "dad7e0d8-bc2e-404d-b1e9-4815e9c45502",
+              "name": "site_width_m",
+              "type": "number",
+              "value": "={{ $json['Site width (m)'] }}"
+            },
+            {
+              "id": "a011cec2-a194-4e97-9659-a01d20ab94e3",
+              "name": "site_length_m",
+              "type": "number",
+              "value": "={{ $json['Site length (m)'] }}"
+            },
+            {
+              "id": "91cb62bc-30ed-43f1-9996-b9ed39b42894",
+              "name": "population_estimate",
+              "type": "number",
+              "value": "={{ $json['Population estimate'] }}"
+            },
+            {
+              "id": "7d7b8e77-751b-4e87-9967-aedde3116430",
+              "name": "budget_usd",
+              "type": "number",
+              "value": "={{ $json['Budget (USD)'] }}"
+            },
+            {
+              "id": "9cd8c868-cfa6-42df-ba9c-26595e5f0c88",
+              "name": "notes",
+              "type": "string",
+              "value": "={{ $json['Notes'] }}"
+            },
+            {
+              "id": "fe278f09-ef14-4332-8190-f2eba912a95c",
+              "name": "mistral_api_key",
+              "type": "string",
+              "value": "fJfmRZuPAVrO30GwVgk33DtSy8dMmpwu "
+            },
+            {
+              "id": "f4e86691-686a-435b-996b-ed6dee37f6bd",
+              "name": "mistral_model",
+              "type": "string",
+              "value": "mistral-large-latest"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Project Input",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -3232,
+        1040
+      ],
+      "id": "d9e106a4-ba7b-4343-a121-62d1707380ea"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst input = $('Project Input').first().json;\n\n// Parse agent output (JSON string from the LLM)\nlet agentOutput = {};\ntry {\n  const raw = $json.output;\n  agentOutput = typeof raw === 'string' ? JSON.parse(raw) : (raw || {});\n} catch(e) {}\n\nconst weather = agentOutput.weather || {};\nlet elevation = null;\ntry { elevation = agentOutput.elevation.results[0].elevation; } catch (e) {}\nlet nearby = [];\ntry {\n  nearby = (agentOutput.nearby.elements || [])\n    .map(e => ({ name: (e.tags && e.tags.name) || 'unnamed', place_type: e.tags && e.tags.place }));\n} catch (e) {}\n\nconst site_data = {\n  location: { latitude: input.latitude, longitude: input.longitude, region_name: input.region_name, elevation_m: elevation },\n  site: { width_m: input.site_width_m, length_m: input.site_length_m, area_m2: input.site_width_m * input.site_length_m, notes: input.notes },\n  weather: { current: weather.current_weather || null, daily: weather.daily || null },\n  nearby_settlements_50km: nearby,\n  demographics: { population_estimate: input.population_estimate },\n  budget_usd: input.budget_usd\n};\nreturn [{ json: { site_data } }];\n"
+      },
+      "name": "Build Site Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2272,
+        1040
+      ],
+      "id": "733ac73b-bdc5-461a-8fcb-2d5e5c89942e"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.mistral.ai/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Project Input').first().json.mistral_api_key.trim() }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { model: $('Project Input').first().json.mistral_model, temperature: 0.3, response_format: { type: 'json_object' }, messages: [ { role: 'system', content: \"You are the Location & Terrain Agent in a smart-city planning pipeline. Given raw site_data (coordinates, elevation, weather, nearby settlements within 50km), classify the site and summarize terrain/climate. Respond ONLY with valid JSON, no prose, no markdown fences: { \\\"site_classification\\\": string, \\\"terrain_summary\\\": string, \\\"climate_summary\\\": string, \\\"regional_context\\\": string, \\\"opportunities\\\": [string], \\\"constraints\\\": [string] }\" }, { role: 'user', content: JSON.stringify($json.site_data) } ] } }}",
+        "options": {}
+      },
+      "name": "Mistral: Location & Terrain Agent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -2032,
+        352
+      ],
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "id": "e00bc340-c8ab-4db0-84c8-10a8756add98"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nlet raw = $json.choices[0].message.content;\nlet parsed;\ntry { parsed = JSON.parse(raw); }\ncatch (e) {\n  const cleaned = raw.replace(/```json|```/g, '').trim();\n  parsed = JSON.parse(cleaned);\n}\nreturn [{ json: { location_report: parsed } }];\n"
+      },
+      "name": "Parse Location Report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1792,
+        352
+      ],
+      "id": "8c379aa2-8cd5-4e95-863f-d189a20acecc"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.mistral.ai/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Project Input').first().json.mistral_api_key.trim() }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { model: $('Project Input').first().json.mistral_model, temperature: 0.2, response_format: { type: 'json_object' }, messages: [ { role: 'system', content: \"You are the Regulation Agent in a smart-city planning pipeline. Draft a plausible STARTING-POINT constraint set for urban development in this region, clearly labeled as AI-drafted and requiring replacement with the real municipal code database before production use. Respond ONLY with valid JSON: { \\\"max_building_height_m\\\": number, \\\"min_road_width_m\\\": number, \\\"min_green_space_pct\\\": number, \\\"hospitals_per_10000_pop\\\": number, \\\"schools_per_5000_pop\\\": number, \\\"parking_spaces_per_unit\\\": number, \\\"disclaimer\\\": string }\" }, { role: 'user', content: JSON.stringify({ region_name: $('Project Input').first().json.region_name }) } ] } }}",
+        "options": {}
+      },
+      "name": "Mistral: Regulation Agent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -2032,
+        1040
+      ],
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 20000,
+      "id": "9d87f45f-7390-4099-99cb-89626efca902"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nlet raw = $json.choices[0].message.content;\nlet parsed;\ntry { parsed = JSON.parse(raw); }\ncatch (e) {\n  const cleaned = raw.replace(/```json|```/g, '').trim();\n  parsed = JSON.parse(cleaned);\n}\nreturn [{ json: { regulation_constraints: parsed } }];\n"
+      },
+      "name": "Parse Regulation Report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1792,
+        1040
+      ],
+      "id": "31801783-e1e8-4d8c-8058-28ca105f2ed3"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.mistral.ai/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Project Input').first().json.mistral_api_key.trim() }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { model: $('Project Input').first().json.mistral_model, temperature: 0.3, response_format: { type: 'json_object' }, messages: [ { role: 'system', content: \"You are the Population & Economy Agent in a smart-city planning pipeline. Given population estimate and region, project demand and regional cost multipliers. Respond ONLY with valid JSON: { \\\"projected_growth_pct_10yr\\\": number, \\\"housing_units_needed\\\": number, \\\"transport_demand_level\\\": string, \\\"regional_cost_multiplier\\\": number, \\\"notes\\\": string }\" }, { role: 'user', content: JSON.stringify($json.site_data.demographics) } ] } }}",
+        "options": {}
+      },
+      "name": "Mistral: Population & Economy Agent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -2032,
+        1744
+      ],
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 20000,
+      "id": "42f7232a-42c7-4779-8b4b-7bb9d21bd180"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nlet raw = $json.choices[0].message.content;\nlet parsed;\ntry { parsed = JSON.parse(raw); }\ncatch (e) {\n  const cleaned = raw.replace(/```json|```/g, '').trim();\n  parsed = JSON.parse(cleaned);\n}\nreturn [{ json: { population_economy_report: parsed } }];\n"
+      },
+      "name": "Parse Population Report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1792,
+        1744
+      ],
+      "id": "550f80d9-b3ca-4756-8e02-8b5d3d0e0007"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nreturn [{ json: { world_model: {\n  site_data: $('Build Site Data').first().json.site_data,\n  location_report: $('Parse Location Report').first().json.location_report,\n  regulation_constraints: $('Parse Regulation Report').first().json.regulation_constraints,\n  population_economy_report: $('Parse Population Report').first().json.population_economy_report\n} } }];\n"
+      },
+      "name": "Assemble World Model",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1552,
+        1040
+      ],
+      "id": "56686bcc-7c32-472b-bccf-0159e35bcb7a"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.mistral.ai/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Project Input').first().json.mistral_api_key.trim() }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { model: $('Project Input').first().json.mistral_model, temperature: 0.4, response_format: { type: 'json_object' }, messages: [ { role: 'system', content: \"You are the Builder Agent in a smart-city planning pipeline. Given the world_model, propose a city plan as a set of sequential layers, and express relationships as a small graph edge list. Respond ONLY with valid JSON: { \\\"districts\\\": [ { \\\"id\\\": string, \\\"name\\\": string, \\\"purpose\\\": string, \\\"area_pct\\\": number } ], \\\"buildings\\\": { \\\"hospitals\\\": number, \\\"schools\\\": number, \\\"residential_units\\\": number, \\\"commercial_m2\\\": number }, \\\"road_hierarchy\\\": [string], \\\"utilities_plan\\\": string, \\\"green_space_pct\\\": number, \\\"transport_plan\\\": string, \\\"graph_edges\\\": [ { \\\"from\\\": string, \\\"to\\\": string, \\\"relation\\\": string } ] }\" }, { role: 'user', content: JSON.stringify($json.world_model) } ] } }}",
+        "options": {}
+      },
+      "name": "Mistral: Builder Agent V1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1312,
+        1040
+      ],
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 20000,
+      "id": "60822797-4764-40dc-991e-ce5f198500a1"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nlet raw = $json.choices[0].message.content;\nlet parsed;\ntry { parsed = JSON.parse(raw); }\ncatch (e) { parsed = JSON.parse(raw.replace(/```json|```/g, '').trim()); }\nreturn [{ json: { plan: parsed } }];\n"
+      },
+      "name": "Parse Builder Plan V1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1072,
+        1040
+      ],
+      "id": "6c97554f-7bc4-41e1-b38e-9dc34981ebf3"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.mistral.ai/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Project Input').first().json.mistral_api_key.trim() }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { model: $('Project Input').first().json.mistral_model, temperature: 0.2, response_format: { type: 'json_object' }, messages: [ { role: 'system', content: \"You are the Fire & Safety Validator in a smart-city planning pipeline. Check the proposed plan against good-practice norms for: fire access routes, hydrant coverage, evacuation distances. Also compare against the regulation_constraints provided. Respond ONLY with valid JSON: { \\\"validator_name\\\": string, \\\"is_compliant\\\": boolean, \\\"score_pct\\\": number, \\\"issues\\\": [ { \\\"problem\\\": string, \\\"suggested_fix\\\": string } ] }\" }, { role: 'user', content: JSON.stringify({ plan: $('Parse Builder Plan V1').first().json.plan, regulation_constraints: $('Parse Regulation Report').first().json.regulation_constraints }) } ] } }}",
+        "options": {}
+      },
+      "name": "Mistral: Fire & Safety Validator",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        0,
+        0
+      ],
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 20000,
+      "id": "1aedbf7a-3cfe-42b5-bd08-c567143987d2"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nlet raw = $json.choices[0].message.content;\nlet parsed;\ntry { parsed = JSON.parse(raw); }\ncatch (e) {\n  const cleaned = raw.replace(/```json|```/g, '').trim();\n  parsed = JSON.parse(cleaned);\n}\nreturn [{ json: { validator_report: parsed } }];\n"
+      },
+      "name": "Parse Fire & Safety Validator",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -592,
+        240
+      ],
+      "id": "25cd1725-f080-4bbd-910c-86f38c42b6fb"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.mistral.ai/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Project Input').first().json.mistral_api_key.trim() }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { model: $('Project Input').first().json.mistral_model, temperature: 0.2, response_format: { type: 'json_object' }, messages: [ { role: 'system', content: \"You are the Traffic & Roads Validator in a smart-city planning pipeline. Check the proposed plan against good-practice norms for: road hierarchy sanity, congestion risk, intersection spacing. Also compare against the regulation_constraints provided. Respond ONLY with valid JSON: { \\\"validator_name\\\": string, \\\"is_compliant\\\": boolean, \\\"score_pct\\\": number, \\\"issues\\\": [ { \\\"problem\\\": string, \\\"suggested_fix\\\": string } ] }\" }, { role: 'user', content: JSON.stringify({ plan: $('Parse Builder Plan V1').first().json.plan, regulation_constraints: $('Parse Regulation Report').first().json.regulation_constraints }) } ] } }}",
+        "options": {}
+      },
+      "name": "Mistral: Traffic & Roads Validator",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -832,
+        640
+      ],
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "id": "5a3805bf-532d-43d7-9029-9dbca1509cc3"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nlet raw = $json.choices[0].message.content;\nlet parsed;\ntry { parsed = JSON.parse(raw); }\ncatch (e) {\n  const cleaned = raw.replace(/```json|```/g, '').trim();\n  parsed = JSON.parse(cleaned);\n}\nreturn [{ json: { validator_report: parsed } }];\n"
+      },
+      "name": "Parse Traffic & Roads Validator",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -592,
+        640
+      ],
+      "id": "e40b7c63-26c1-47df-a4cf-13dc72b0db91"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.mistral.ai/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Project Input').first().json.mistral_api_key.trim() }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { model: $('Project Input').first().json.mistral_model, temperature: 0.2, response_format: { type: 'json_object' }, messages: [ { role: 'system', content: \"You are the Environmental Validator in a smart-city planning pipeline. Check the proposed plan against good-practice norms for: flood risk, green space minimums, pollution/noise exposure. Also compare against the regulation_constraints provided. Respond ONLY with valid JSON: { \\\"validator_name\\\": string, \\\"is_compliant\\\": boolean, \\\"score_pct\\\": number, \\\"issues\\\": [ { \\\"problem\\\": string, \\\"suggested_fix\\\": string } ] }\" }, { role: 'user', content: JSON.stringify({ plan: $('Parse Builder Plan V1').first().json.plan, regulation_constraints: $('Parse Regulation Report').first().json.regulation_constraints }) } ] } }}",
+        "options": {}
+      },
+      "name": "Mistral: Environmental Validator",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -832,
+        1040
+      ],
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 20000,
+      "id": "505604d1-84aa-4e3b-a82d-43d2e11815aa"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nlet raw = $json.choices[0].message.content;\nlet parsed;\ntry { parsed = JSON.parse(raw); }\ncatch (e) {\n  const cleaned = raw.replace(/```json|```/g, '').trim();\n  parsed = JSON.parse(cleaned);\n}\nreturn [{ json: { validator_report: parsed } }];\n"
+      },
+      "name": "Parse Environmental Validator",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -592,
+        1040
+      ],
+      "id": "1879f6ff-cdd9-4606-bb72-a628a08322d6"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.mistral.ai/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Project Input').first().json.mistral_api_key.trim() }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { model: $('Project Input').first().json.mistral_model, temperature: 0.2, response_format: { type: 'json_object' }, messages: [ { role: 'system', content: \"You are the Infrastructure Validator in a smart-city planning pipeline. Check the proposed plan against good-practice norms for: electrical and water utility coverage adequacy. Also compare against the regulation_constraints provided. Respond ONLY with valid JSON: { \\\"validator_name\\\": string, \\\"is_compliant\\\": boolean, \\\"score_pct\\\": number, \\\"issues\\\": [ { \\\"problem\\\": string, \\\"suggested_fix\\\": string } ] }\" }, { role: 'user', content: JSON.stringify({ plan: $('Parse Builder Plan V1').first().json.plan, regulation_constraints: $('Parse Regulation Report').first().json.regulation_constraints }) } ] } }}",
+        "options": {}
+      },
+      "name": "Mistral: Infrastructure Validator",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -832,
+        1440
+      ],
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 20000,
+      "id": "7a6062e5-b969-44b5-8f19-05ae830d1691"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nlet raw = $json.choices[0].message.content;\nlet parsed;\ntry { parsed = JSON.parse(raw); }\ncatch (e) {\n  const cleaned = raw.replace(/```json|```/g, '').trim();\n  parsed = JSON.parse(cleaned);\n}\nreturn [{ json: { validator_report: parsed } }];\n"
+      },
+      "name": "Parse Infrastructure Validator",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -592,
+        1440
+      ],
+      "id": "0eb7bec7-e7ff-4b70-bd08-ba115cb934e4"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.mistral.ai/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Project Input').first().json.mistral_api_key.trim() }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { model: $('Project Input').first().json.mistral_model, temperature: 0.2, response_format: { type: 'json_object' }, messages: [ { role: 'system', content: \"You are the Accessibility & Social Validator in a smart-city planning pipeline. Check the proposed plan against good-practice norms for: hospital/school ratios per population, parks within walking distance. Also compare against the regulation_constraints provided. Respond ONLY with valid JSON: { \\\"validator_name\\\": string, \\\"is_compliant\\\": boolean, \\\"score_pct\\\": number, \\\"issues\\\": [ { \\\"problem\\\": string, \\\"suggested_fix\\\": string } ] }\" }, { role: 'user', content: JSON.stringify({ plan: $('Parse Builder Plan V1').first().json.plan, regulation_constraints: $('Parse Regulation Report').first().json.regulation_constraints }) } ] } }}",
+        "options": {}
+      },
+      "name": "Mistral: Accessibility & Social Validator",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -832,
+        1840
+      ],
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 20000,
+      "id": "28071651-e0ec-4f11-92df-fa2e6f7da5b2"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nlet raw = $json.choices[0].message.content;\nlet parsed;\ntry { parsed = JSON.parse(raw); }\ncatch (e) {\n  const cleaned = raw.replace(/```json|```/g, '').trim();\n  parsed = JSON.parse(cleaned);\n}\nreturn [{ json: { validator_report: parsed } }];\n"
+      },
+      "name": "Parse Accessibility & Social Validator",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -592,
+        1840
+      ],
+      "id": "68a08464-e38a-40db-beab-5f7cf1f98182"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst validators = [\n  $('Parse Fire & Safety Validator').first().json.validator_report,\n  $('Parse Traffic & Roads Validator').first().json.validator_report,\n  $('Parse Environmental Validator').first().json.validator_report,\n  $('Parse Infrastructure Validator').first().json.validator_report,\n  $('Parse Accessibility & Social Validator').first().json.validator_report,\n];\nlet totalScore = 0, allCompliant = true;\nconst issues = [];\nfor (const v of validators) {\n  totalScore += (v.score_pct || 0);\n  if (!v.is_compliant) allCompliant = false;\n  (v.issues || []).forEach(i => issues.push({ validator: v.validator_name, ...i }));\n}\nreturn [{ json: {\n  is_compliant: allCompliant,\n  overall_score_pct: Math.round((totalScore / validators.length) * 10) / 10,\n  issues,\n  validator_details: validators\n} }];\n"
+      },
+      "name": "Master Validator",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -352,
+        1040
+      ],
+      "id": "a7ddc9b3-842c-49b4-afb7-1f5ba588dcac"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "leftValue": "={{ $json.is_compliant }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "IF: Is Compliant",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -112,
+        1040
+      ],
+      "id": "e17cd05d-d31c-422f-9a76-1832e2441d4b"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nreturn [{ json: {\n  final_plan: $('Parse Builder Plan V1').first().json.plan,\n  validation_summary: $('Master Validator').first().json,\n  revision_applied: false\n} }];\n"
+      },
+      "name": "Use V1 Plan",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        128,
+        544
+      ],
+      "id": "28842355-3677-4848-9cf6-c950e830160d"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.mistral.ai/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Project Input').first().json.mistral_api_key.trim() }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { model: $('Project Input').first().json.mistral_model, temperature: 0.4, response_format: { type: 'json_object' }, messages: [ { role: 'system', content: \"You are the Builder Agent revising a smart-city plan based on validator feedback. Given the original plan and the list of compliance issues, produce a corrected plan in the SAME JSON shape as the original plan (districts, buildings, road_hierarchy, utilities_plan, green_space_pct, transport_plan, graph_edges). Respond ONLY with valid JSON, no prose, no markdown fences.\" }, { role: 'user', content: JSON.stringify({ original_plan: $('Parse Builder Plan V1').first().json.plan, issues: $json.issues }) } ] } }}",
+        "options": {}
+      },
+      "name": "Mistral: Builder Revision",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        128,
+        1552
+      ],
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 20000,
+      "id": "c0c6f5aa-fd83-4b92-81b7-4932819755bc"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nlet raw = $json.choices[0].message.content;\nlet parsed;\ntry { parsed = JSON.parse(raw); }\ncatch (e) { parsed = JSON.parse(raw.replace(/```json|```/g, '').trim()); }\nreturn [{ json: { plan: parsed } }];\n"
+      },
+      "name": "Parse Builder Revision",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        368,
+        1552
+      ],
+      "id": "1becde58-91a7-40ec-bea1-26aa248fbf3f"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nreturn [{ json: {\n  final_plan: $json.plan,\n  validation_summary: $('Master Validator').first().json,\n  revision_applied: true\n} }];\n"
+      },
+      "name": "Use Revised Plan",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        608,
+        1552
+      ],
+      "id": "4a4da10c-7126-409f-9fbb-0431881498fd"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.mistral.ai/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Project Input').first().json.mistral_api_key.trim() }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { model: $('Project Input').first().json.mistral_model, temperature: 0.3, response_format: { type: 'json_object' }, messages: [ { role: 'system', content: \"You are the 2D Generator in a smart-city planning pipeline. Given the final_plan, produce an indexed layout specification: a flat list of placed objects, each with a unique id, type, approximate relative position (x_pct, y_pct within the site 0-100), and size, so an architect (or a human editor) can reference any object by id for edits. Respond ONLY with valid JSON: { \\\"objects\\\": [ { \\\"id\\\": string, \\\"type\\\": string, \\\"x_pct\\\": number, \\\"y_pct\\\": number, \\\"width_pct\\\": number, \\\"height_pct\\\": number, \\\"label\\\": string } ] }\" }, { role: 'user', content: JSON.stringify($json.final_plan) } ] } }}",
+        "options": {}
+      },
+      "name": "Mistral: 2D Plan Generator",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        848,
+        1040
+      ],
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "id": "be5d0382-3401-428f-98b8-d1835829c15c"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nlet raw = $json.choices[0].message.content;\nlet parsed;\ntry { parsed = JSON.parse(raw); }\ncatch (e) {\n  const cleaned = raw.replace(/```json|```/g, '').trim();\n  parsed = JSON.parse(cleaned);\n}\nreturn [{ json: { plan_2d: parsed } }];\n"
+      },
+      "name": "Parse 2D Plan",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1088,
+        1040
+      ],
+      "id": "7d03d7a3-c005-4b3a-9aee-d0dd20ea49ed"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.mistral.ai/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Project Input').first().json.mistral_api_key.trim() }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { model: $('Project Input').first().json.mistral_model, temperature: 0.3, response_format: { type: 'json_object' }, messages: [ { role: 'system', content: \"You are the 3D Generator in a smart-city planning pipeline. Given the indexed 2D plan_2d, produce a 3D massing specification (parameters for a procedural 3D engine, not raw geometry): for each object, add floors, height_m, and building_type. Respond ONLY with valid JSON: { \\\"massing\\\": [ { \\\"id\\\": string, \\\"floors\\\": number, \\\"height_m\\\": number, \\\"building_type\\\": string } ] }\" }, { role: 'user', content: JSON.stringify($json.plan_2d) } ] } }}",
+        "options": {}
+      },
+      "name": "Mistral: 3D Massing Generator",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1328,
+        1040
+      ],
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 20000,
+      "id": "3ba00bc4-263c-4663-9f9f-e371f767ead6"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nlet raw = $json.choices[0].message.content;\nlet parsed;\ntry { parsed = JSON.parse(raw); }\ncatch (e) {\n  const cleaned = raw.replace(/```json|```/g, '').trim();\n  parsed = JSON.parse(cleaned);\n}\nreturn [{ json: { massing_3d: parsed } }];\n"
+      },
+      "name": "Parse 3D Massing",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1568,
+        1040
+      ],
+      "id": "9f385115-25f1-475a-8979-31b055ad286d"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.mistral.ai/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Project Input').first().json.mistral_api_key.trim() }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { model: $('Project Input').first().json.mistral_model, temperature: 0.3, response_format: { type: 'json_object' }, messages: [ { role: 'system', content: \"You are the Financial Agent in a smart-city planning pipeline. Given the final plan, the 3D massing, the regional_cost_multiplier and the budget, produce a high-level cost estimate. State clearly these are planning-stage estimates, not quotes. Respond ONLY with valid JSON: { \\\"estimated_total_cost_usd\\\": number, \\\"cost_breakdown\\\": { \\\"buildings\\\": number, \\\"roads\\\": number, \\\"utilities\\\": number, \\\"green_space\\\": number, \\\"contingency\\\": number }, \\\"within_budget\\\": boolean, \\\"construction_phases\\\": [string], \\\"notes\\\": string }\" }, { role: 'user', content: JSON.stringify({ massing_3d: $json.massing_3d, budget_usd: $('Project Input').first().json.budget_usd, regional_cost_multiplier: $('Parse Population Report').first().json.population_economy_report.regional_cost_multiplier }) } ] } }}",
+        "options": {}
+      },
+      "name": "Mistral: Financial Agent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1808,
+        1040
+      ],
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 20000,
+      "id": "77402c8d-e224-407a-818e-69af2ef19126"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nlet raw = $json.choices[0].message.content;\nlet parsed;\ntry { parsed = JSON.parse(raw); }\ncatch (e) {\n  const cleaned = raw.replace(/```json|```/g, '').trim();\n  parsed = JSON.parse(cleaned);\n}\nreturn [{ json: { financial_report: parsed } }];\n"
+      },
+      "name": "Parse Financial Report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2048,
+        1040
+      ],
+      "id": "5363db64-7a8a-4ee9-8031-78daf17226f6"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nreturn [{ json: {\n  project: $('Project Input').first().json.region_name,\n  generated_at: new Date().toISOString(),\n  world_model: $('Assemble World Model').first().json.world_model,\n  final_city_plan: $('Master Validator').first().json.is_compliant\n      ? $('Use V1 Plan').first().json\n      : $('Use Revised Plan').first().json,\n  plan_2d: $('Parse 2D Plan').first().json.plan_2d,\n  massing_3d: $('Parse 3D Massing').first().json.massing_3d,\n  financial_estimate: $('Parse Financial Report').first().json.financial_report\n} }];\n"
+      },
+      "name": "Final Master Report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2288,
+        1040
+      ],
+      "id": "709fa2a5-5dca-4a7b-a1cf-128e7d327843"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "numberInputs": 3,
+        "options": {}
+      },
+      "id": "4a8fc6b3-1fa6-4860-8d29-d00a5c80d3d7",
+      "name": "Merge World Inputs",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -1680,
+        1040
+      ]
+    },
+    {
+      "parameters": {
+        "formTitle": "Smart City Project Input",
+        "formDescription": "Enter the site location and project parameters to generate a full smart-city plan, 3D massing, and financial estimate. Processing takes a couple of minutes.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Region name",
+              "placeholder": "e.g. Sousse, Tunisia",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Latitude",
+              "fieldType": "number",
+              "placeholder": "e.g. 36.8188",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Longitude",
+              "fieldType": "number",
+              "placeholder": "e.g. 10.1658",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Site width (m)",
+              "fieldType": "number",
+              "placeholder": "e.g. 1200",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Site length (m)",
+              "fieldType": "number",
+              "placeholder": "e.g. 1800",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Population estimate",
+              "fieldType": "number",
+              "placeholder": "e.g. 15000",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Budget (USD)",
+              "fieldType": "number",
+              "placeholder": "e.g. 50000000",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Notes",
+              "fieldType": "textarea",
+              "placeholder": "Site notes (optional)"
+            }
+          ]
+        },
+        "responseMode": "lastNode",
+        "options": {
+          "buttonLabel": "Generate Plan",
+          "path": "smart-city-plan"
+        }
+      },
+      "id": "2d8dde9c-7b7b-467b-bb7a-c21f38592fbb",
+      "name": "Project Form",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        -3712,
+        1040
+      ],
+      "webhookId": "a42beff8-7811-4bd6-9c7e-bad2c5a14183"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst r = $json;\nconst fin = (r.financial_estimate) || {};\nconst plan = (r.final_city_plan && r.final_city_plan.final_plan) || {};\nconst massing = (r.massing_3d && r.massing_3d.massing) || [];\nconst objects2d = (r.plan_2d && r.plan_2d.objects) || [];\nconst cb = fin.cost_breakdown || {};\n\nfunction esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }\nfunction money(n){ return (n==null)?'-':('$' + Number(n).toLocaleString('en-US')); }\n\nconst posById = {};\nobjects2d.forEach(function(o){ posById[o.id] = o; });\nlet gi = 0;\nconst buildings = massing.map(function(m){\n  const p = posById[m.id];\n  let x, z, w, dep;\n  if (p) { x = p.x_pct; z = p.y_pct; w = p.width_pct || 5; dep = p.height_pct || 5; }\n  else { const col = gi % 8, row = Math.floor(gi / 8); x = 8 + col*11; z = 10 + row*11; w = 6; dep = 6; gi++; }\n  return { id: m.id, type: m.building_type || 'building', floors: m.floors || 1, height_m: m.height_m || 10, x, z, w, dep, label: (posById[m.id] && posById[m.id].label) || m.id };\n});\n\nconst districtsRows = (plan.districts||[]).map(d => `<tr><td>${esc(d.id)}</td><td>${esc(d.name)}</td><td>${esc(d.purpose)}</td><td>${esc(d.area_pct)}%</td></tr>`).join('');\nconst massingRows   = massing.map(m => `<tr><td>${esc(m.id)}</td><td>${esc(m.building_type)}</td><td>${esc(m.floors)}</td><td>${esc(m.height_m)} m</td></tr>`).join('');\nconst phases        = (fin.construction_phases||[]).map(p => `<li>${esc(p)}</li>`).join('');\nconst fullJson      = esc(JSON.stringify(r, null, 2));\nconst buildingsJson = JSON.stringify(buildings);\nconst objects2dJson = JSON.stringify(objects2d);\n\nconst html = `<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">\n<title>Smart City Plan — ${esc(r.project)}</title>\n<style>\n*{box-sizing:border-box;margin:0;padding:0}\nbody{font-family:'Segoe UI',system-ui,Arial,sans-serif;color:#1f2937;background:#f1f5f9}\n.header{background:linear-gradient(135deg,#1e3a5f 0%,#0f766e 100%);color:#fff;padding:28px 32px}\n.header h1{font-size:1.8rem;font-weight:700;letter-spacing:-.5px}\n.header p{opacity:.75;margin-top:6px;font-size:.9rem}\n.wrap{max-width:1100px;margin:0 auto;padding:28px 24px}\n.section{background:#fff;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.08);padding:24px;margin-bottom:24px}\n.section h2{font-size:1.1rem;font-weight:700;color:#111827;margin-bottom:16px;padding-bottom:10px;border-bottom:2px solid #f3f4f6;display:flex;align-items:center;gap:8px}\n.tabs{display:flex;gap:8px;margin-bottom:16px}\n.tab{padding:8px 22px;border-radius:8px;border:2px solid #e5e7eb;background:#fff;cursor:pointer;font-size:.9rem;font-weight:600;color:#6b7280;transition:all .15s}\n.tab.active{border-color:#1e3a5f;background:#1e3a5f;color:#fff}\n.panel{display:none}.panel.active{display:block}\n#c2d{width:100%;display:block;border-radius:10px;border:1px solid #e5e7eb;cursor:crosshair}\n#c3d{width:100%;height:520px;background:#dbeafe;border-radius:10px;display:block}\n.tip{position:fixed;background:rgba(15,23,42,.93);color:#fff;padding:9px 13px;border-radius:8px;font-size:.81rem;pointer-events:none;display:none;z-index:999;max-width:230px;line-height:1.6}\n.legend{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}\n.li{display:flex;align-items:center;gap:5px;font-size:.78rem;color:#374151;background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;padding:3px 9px}\n.sw{width:12px;height:12px;border-radius:3px;flex-shrink:0}\ntable{width:100%;border-collapse:collapse;font-size:.87rem}\nth,td{border:1px solid #e5e7eb;padding:8px 10px;text-align:left}\nth{background:#f8fafc;font-weight:600;color:#374151}\ntr:nth-child(even) td{background:#f9fafb}\n.fg{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:12px;margin-bottom:16px}\n.fc{background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:14px;text-align:center}\n.fc .lbl{font-size:.72rem;color:#6b7280;font-weight:600;text-transform:uppercase;letter-spacing:.04em}\n.fc .val{font-size:1.1rem;font-weight:700;color:#111827;margin-top:4px}\npre{background:#0f172a;color:#e2e8f0;padding:16px;border-radius:8px;overflow:auto;max-height:400px;font-size:11px;line-height:1.5}\n.ok{color:#15803d;font-weight:700}.no{color:#dc2626;font-weight:700}\n</style>\n</head>\n<body>\n<div class=\"header\">\n  <h1>&#127970; Smart City Plan — ${esc(r.project)}</h1>\n  <p>Generated ${esc(r.generated_at)} &nbsp;&middot;&nbsp; ${buildings.length} objects &nbsp;&middot;&nbsp; Revision applied: <strong>${esc(r.final_city_plan&&r.final_city_plan.revision_applied)}</strong></p>\n</div>\n<div class=\"wrap\">\n\n<div class=\"section\">\n  <h2>&#127759; Site Plan</h2>\n  <div class=\"tabs\">\n    <button class=\"tab active\" onclick=\"sw('2d',this)\">&#9646; 2D Bird's-Eye</button>\n    <button class=\"tab\" onclick=\"sw('3d',this)\">&#9643; 3D Massing</button>\n  </div>\n  <div id=\"p2d\" class=\"panel active\">\n    <div class=\"legend\" id=\"lg2d\"></div>\n    <canvas id=\"c2d\"></canvas>\n    <p style=\"color:#6b7280;font-size:12px;margin-top:8px\">&#128161; Hover a block for details. Colours = building/zone type.</p>\n  </div>\n  <div id=\"p3d\" class=\"panel\">\n    <div class=\"legend\" id=\"lg3d\"></div>\n    <canvas id=\"c3d\"></canvas>\n    <p style=\"color:#6b7280;font-size:12px;margin-top:8px\">&#128161; Drag to rotate &middot; Scroll to zoom &middot; Right-drag to pan</p>\n  </div>\n</div>\n\n<div class=\"section\">\n  <h2>&#128176; Financial Estimate</h2>\n  <div class=\"fg\">\n    <div class=\"fc\"><div class=\"lbl\">Total Cost</div><div class=\"val\">${money(fin.estimated_total_cost_usd)}</div></div>\n    <div class=\"fc\"><div class=\"lbl\">Buildings</div><div class=\"val\">${money(cb.buildings)}</div></div>\n    <div class=\"fc\"><div class=\"lbl\">Roads</div><div class=\"val\">${money(cb.roads)}</div></div>\n    <div class=\"fc\"><div class=\"lbl\">Utilities</div><div class=\"val\">${money(cb.utilities)}</div></div>\n    <div class=\"fc\"><div class=\"lbl\">Green Space</div><div class=\"val\">${money(cb.green_space)}</div></div>\n    <div class=\"fc\"><div class=\"lbl\">Contingency</div><div class=\"val\">${money(cb.contingency)}</div></div>\n  </div>\n  <p>Within budget: <span class=\"${fin.within_budget?'ok':'no'}\">${fin.within_budget?'&#10003; Yes':'&#10007; No'}</span></p>\n  <p style=\"color:#6b7280;font-size:13px;margin-top:6px\">${esc(fin.notes)}</p>\n  <div style=\"margin-top:14px\"><strong>Construction Phases</strong><ol style=\"padding-left:20px;margin-top:8px\">${phases}</ol></div>\n</div>\n\n<div class=\"section\">\n  <h2>&#127968; Districts (${(plan.districts||[]).length})</h2>\n  <table><tr><th>ID</th><th>Name</th><th>Purpose</th><th>Area</th></tr>${districtsRows}</table>\n</div>\n\n<div class=\"section\">\n  <h2>&#127959; 3D Massing Objects (${massing.length})</h2>\n  <table><tr><th>ID</th><th>Type</th><th>Floors</th><th>Height</th></tr>${massingRows}</table>\n</div>\n\n<div class=\"section\">\n  <h2>&#128196; Full Report JSON</h2>\n  <pre>${fullJson}</pre>\n</div>\n\n</div>\n<div class=\"tip\" id=\"tip\"></div>\n\n<script>\nvar BUILDINGS=${buildingsJson};\nvar OBJ2D=${objects2dJson};\nvar massMap={};\nBUILDINGS.forEach(function(m){massMap[m.id]=m;});\nvar RECS=OBJ2D.length>0?OBJ2D:BUILDINGS.map(function(m){return{id:m.id,type:m.type,x_pct:m.x,y_pct:m.z,width_pct:m.w,height_pct:m.dep,label:m.label||m.id};});\n\nvar PAL={residential_tower:'#60a5fa',residential_block:'#93c5fd',residential:'#bfdbfe',mixed_use:'#a78bfa',commercial:'#fbbf24',commercial_tower:'#f59e0b',commercial_block:'#fde68a',office_tower:'#f87171',office:'#fca5a5',retail:'#fb923c',civic_center:'#34d399',civic:'#6ee7b7',transit_hub:'#2dd4bf',transit:'#99f6e4',school:'#4ade80',hospital:'#ec4899',park:'#86efac',green_space:'#bbf7d0',road:'#cbd5e1',road_arterial:'#94a3b8',road_local:'#e2e8f0',warehouse:'#9ca3af',light_industry:'#6b7280',water:'#7dd3fc',open_space:'#d9f99d',building:'#94a3b8'};\nfunction clr(t){\n  if(!t)return'#94a3b8';\n  var k=t.toLowerCase().replace(/[^a-z_]/g,'_');\n  if(PAL[k])return PAL[k];\n  var ks=Object.keys(PAL);\n  for(var i=0;i<ks.length;i++){if(k.indexOf(ks[i])!==-1||ks[i].indexOf(k)!==-1)return PAL[ks[i]];}\n  var h=0;for(var j=0;j<k.length;j++)h=(h*31+k.charCodeAt(j))&0xffffff;\n  return'#'+('000000'+h.toString(16)).slice(-6);\n}\n\nfunction sw(v,btn){\n  document.querySelectorAll('.tab').forEach(function(b){b.classList.remove('active');});\n  document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('active');});\n  btn.classList.add('active');\n  document.getElementById('p'+v).classList.add('active');\n  if(v==='2d')draw2D();\n  if(v==='3d'&&!window._3di)init3D();\n}\n\nfunction draw2D(){\n  var cv=document.getElementById('c2d');\n  var W=cv.parentElement.clientWidth||800;\n  var H=Math.round(W*0.62);\n  cv.width=W; cv.height=H; cv.style.height=H+'px';\n  var ctx=cv.getContext('2d');\n  ctx.fillStyle='#e8f5e9'; ctx.fillRect(0,0,W,H);\n  ctx.strokeStyle='rgba(34,85,34,0.12)'; ctx.lineWidth=1;\n  for(var gx=0;gx<=10;gx++){ctx.beginPath();ctx.moveTo(gx*(W/10),0);ctx.lineTo(gx*(W/10),H);ctx.stroke();}\n  for(var gy=0;gy<=10;gy++){ctx.beginPath();ctx.moveTo(0,gy*(H/10));ctx.lineTo(W,gy*(H/10));ctx.stroke();}\n  ctx.strokeStyle='#1e3a5f'; ctx.lineWidth=3; ctx.strokeRect(2,2,W-4,H-4);\n  RECS.forEach(function(o){\n    var xp=(o.x_pct||0)/100,yp=(o.y_pct||0)/100;\n    var wp=Math.max(0.025,(o.width_pct||5)/100),hp=Math.max(0.018,(o.height_pct||5)/100);\n    var px=Math.round(xp*W),py=Math.round(yp*H),pw=Math.round(wp*W),ph=Math.round(hp*H);\n    var fill=clr(o.type);\n    ctx.shadowColor='rgba(0,0,0,0.18)'; ctx.shadowBlur=5; ctx.shadowOffsetX=2; ctx.shadowOffsetY=2;\n    ctx.fillStyle=fill; ctx.fillRect(px+2,py+2,pw-4,ph-4);\n    ctx.shadowColor='transparent'; ctx.shadowBlur=0;\n    ctx.strokeStyle='rgba(0,0,0,0.28)'; ctx.lineWidth=1; ctx.strokeRect(px+2,py+2,pw-4,ph-4);\n    if(pw>36&&ph>14){\n      ctx.fillStyle='rgba(0,0,0,0.72)';\n      ctx.font='bold '+Math.min(12,Math.round(ph*0.3))+'px Segoe UI,Arial,sans-serif';\n      ctx.textAlign='center'; ctx.textBaseline='middle';\n      var lbl=o.label||o.type||o.id; if(lbl.length>16)lbl=lbl.slice(0,14)+'\\u2026';\n      ctx.fillText(lbl,px+pw/2,py+ph/2);\n    }\n  });\n  drawCompass(ctx,W-46,46,30);\n  ctx.fillStyle='rgba(15,23,42,0.55)'; ctx.fillRect(14,H-22,80,5);\n  ctx.fillStyle='#fff'; ctx.fillRect(14,H-22,40,5);\n  ctx.fillStyle='#1f2937'; ctx.font='10px Segoe UI,Arial'; ctx.textAlign='left'; ctx.fillText('Site boundary (0\\u2013100%)',14,H-28);\n  buildLg();\n}\n\nfunction drawCompass(ctx,cx,cy,r){\n  ctx.save();\n  ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2);\n  ctx.fillStyle='rgba(255,255,255,0.88)'; ctx.fill();\n  ctx.strokeStyle='#94a3b8'; ctx.lineWidth=1; ctx.stroke();\n  ctx.beginPath(); ctx.moveTo(cx,cy-r+5); ctx.lineTo(cx-5,cy+5); ctx.lineTo(cx,cy-2); ctx.closePath();\n  ctx.fillStyle='#1e3a5f'; ctx.fill();\n  ctx.beginPath(); ctx.moveTo(cx,cy-r+5); ctx.lineTo(cx+5,cy+5); ctx.lineTo(cx,cy-2); ctx.closePath();\n  ctx.fillStyle='#94a3b8'; ctx.fill();\n  ctx.fillStyle='#1e3a5f'; ctx.font='bold 10px Arial'; ctx.textAlign='center'; ctx.textBaseline='middle';\n  ctx.fillText('N',cx,cy-r+1);\n  ctx.restore();\n}\n\nfunction buildLg(){\n  var seen={}; RECS.forEach(function(o){if(o.type)seen[o.type]=clr(o.type);});\n  document.getElementById('lg2d').innerHTML=Object.keys(seen).map(function(t){\n    return '<div class=\"li\"><div class=\"sw\" style=\"background:'+seen[t]+';border:1px solid rgba(0,0,0,0.2)\"></div>'+t+'</div>';\n  }).join('');\n}\n\ndocument.addEventListener('mousemove',function(e){\n  var cv=document.getElementById('c2d');\n  if(!cv||!cv.offsetParent)return;\n  var rect=cv.getBoundingClientRect();\n  var W=cv.width,H=cv.height;\n  var cx=(e.clientX-rect.left)*(W/rect.width),cy=(e.clientY-rect.top)*(H/rect.height);\n  var tt=document.getElementById('tip'),hit=null;\n  RECS.forEach(function(o){\n    var xp=(o.x_pct||0)/100*W,yp=(o.y_pct||0)/100*H;\n    var wp=Math.max(0.025,(o.width_pct||5)/100)*W,hp=Math.max(0.018,(o.height_pct||5)/100)*H;\n    if(cx>=xp&&cx<=xp+wp&&cy>=yp&&cy<=yp+hp)hit=o;\n  });\n  if(hit){\n    var mm=massMap[hit.id];\n    var lines=['<b>'+hit.label+'</b>','Type: '+hit.type,'Position: ('+Math.round(hit.x_pct||0)+'%, '+Math.round(hit.y_pct||0)+'%)','Size: '+Math.round(hit.width_pct||0)+'% \\u00d7 '+Math.round(hit.height_pct||0)+'%'];\n    if(mm){lines.push('Floors: '+mm.floors);lines.push('Height: '+mm.height_m+' m');}\n    tt.innerHTML=lines.join('<br>'); tt.style.display='block';\n    tt.style.left=(e.clientX+16)+'px'; tt.style.top=(e.clientY-10)+'px';\n  } else { tt.style.display='none'; }\n});\n\nfunction init3D(){\n  window._3di=true;\n  var cv=document.getElementById('c3d'),T=window.THREE;\n  if(!T||!cv)return;\n  var scene=new T.Scene(); scene.background=new T.Color(0xdbeafe);\n  var cam=new T.PerspectiveCamera(55,cv.clientWidth/cv.clientHeight,0.1,2000); cam.position.set(120,110,140);\n  var rend=new T.WebGLRenderer({canvas:cv,antialias:true}); rend.setSize(cv.clientWidth,cv.clientHeight,false); rend.setPixelRatio(window.devicePixelRatio);\n  var ctrl=new T.OrbitControls(cam,rend.domElement); ctrl.enableDamping=true; ctrl.target.set(50,0,50);\n  scene.add(new T.AmbientLight(0xffffff,0.75));\n  var dl=new T.DirectionalLight(0xffffff,0.7); dl.position.set(80,160,60); scene.add(dl);\n  var gr=new T.Mesh(new T.PlaneGeometry(140,140),new T.MeshLambertMaterial({color:0xe5e7eb})); gr.rotation.x=-Math.PI/2; gr.position.set(50,0,50); scene.add(gr);\n  scene.add(new T.GridHelper(140,14,0x9ca3af,0xcbd5e1));\n  var CMAP={residential_tower:0x60a5fa,residential_block:0x93c5fd,residential:0xbfdbfe,mixed_use:0xa78bfa,commercial:0xfbbf24,commercial_tower:0xf59e0b,office_tower:0xef4444,retail:0xfb923c,civic_center:0x34d399,transit_hub:0x2dd4bf,school:0x22c55e,hospital:0xec4899,park:0x86efac,green_space:0xbbf7d0,warehouse:0x9ca3af,light_industry:0x6b7280};\n  function hx(t){var k=(t||'').toLowerCase().replace(/[^a-z_]/g,'_');if(CMAP[k]!==undefined)return CMAP[k];var ks=Object.keys(CMAP);for(var i=0;i<ks.length;i++){if(k.indexOf(ks[i])!==-1||ks[i].indexOf(k)!==-1)return CMAP[ks[i]];}return 0x94a3b8;}\n  BUILDINGS.forEach(function(b){\n    var w=Math.max(2,b.w||5),d=Math.max(2,b.dep||5),h=Math.max(4,(b.height_m||10)*0.9);\n    var mesh=new T.Mesh(new T.BoxGeometry(w,h,d),new T.MeshLambertMaterial({color:hx(b.type)}));\n    mesh.position.set(b.x,h/2,b.z); scene.add(mesh);\n    var ed=new T.LineSegments(new T.EdgesGeometry(new T.BoxGeometry(w,h,d)),new T.LineBasicMaterial({color:0x1f2937,opacity:0.2,transparent:true}));\n    ed.position.copy(mesh.position); scene.add(ed);\n  });\n  var t3d={}; BUILDINGS.forEach(function(b){t3d[b.type]=hx(b.type);});\n  document.getElementById('lg3d').innerHTML=Object.keys(t3d).map(function(t){\n    var c='#'+('000000'+t3d[t].toString(16)).slice(-6);\n    return '<div class=\"li\"><div class=\"sw\" style=\"background:'+c+';border:1px solid rgba(0,0,0,0.2)\"></div>'+t+'</div>';\n  }).join('');\n  window.addEventListener('resize',function(){rend.setSize(cv.clientWidth,520,false);cam.aspect=cv.clientWidth/520;cam.updateProjectionMatrix();});\n  (function loop(){requestAnimationFrame(loop);ctrl.update();rend.render(scene,cam);})();\n}\n\ndocument.addEventListener('DOMContentLoaded',function(){draw2D();});\nwindow.addEventListener('resize',function(){if(document.getElementById('p2d').classList.contains('active'))draw2D();});\n</script>\n<script src=\"https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js\"></script>\n<script src=\"https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js\"></script>\n</body></html>`;\n\nconst base64 = Buffer.from(html,'utf8').toString('base64');\nreturn [{\n  json: { generated_at: r.generated_at, project: r.project, building_count: buildings.length, objects_2d: objects2d.length },\n  binary: { data: { data: base64, mimeType: 'text/html', fileName: 'smart-city-report.html' } }\n}];\n"
+      },
+      "id": "ba656285-309a-4be8-9ba6-4077e10207e2",
+      "name": "Build Report Page",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2528,
+        1040
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "completion",
+        "respondWith": "returnBinary",
+        "completionTitle": "Your Smart City Plan is ready",
+        "completionMessage": "Your full report with an interactive 3D model has been generated. Download the HTML file below and open it in your browser to explore the 3D city model.",
+        "options": {}
+      },
+      "id": "bc9d36cb-245f-4cc8-bfb0-5d1f5995452f",
+      "name": "Show Report",
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 2.5,
+      "position": [
+        2768,
+        1040
+      ],
+      "webhookId": "95ff6c10-d57e-4a88-a605-c5afef798a79"
+    },
+    {
+      "parameters": {
+        "model": "mistral-large-latest",
+        "options": {
+          "temperature": 0.1
+        }
+      },
+      "id": "57261cd0-c20e-4163-9b5d-08f02f76e28f",
+      "name": "Mistral: Site Data Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatMistralCloud",
+      "typeVersion": 1,
+      "position": [
+        -2752,
+        1280
+      ],
+      "credentials": {
+        "mistralCloudApi": {
+          "id": "MfTZrGJMhBVPQ93B",
+          "name": "Mistral Cloud account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://api.open-meteo.com/v1/forecast?latitude={{ $fromAI('latitude','The site latitude coordinate','number') }}&longitude={{ $fromAI('longitude','The site longitude coordinate','number') }}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,windspeed_10m_max&timezone=auto",
+        "options": {}
+      },
+      "id": "3b9a6548-ec49-41e2-b269-b48a96383d54",
+      "name": "Get Weather Tool",
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        -2992,
+        800
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.open-elevation.com/api/v1/lookup?locations={{ $fromAI('latitude','The site latitude coordinate','number') }},{{ $fromAI('longitude','The site longitude coordinate','number') }}",
+        "options": {}
+      },
+      "id": "44cdc913-b74e-41a3-8ab8-335269dc31dc",
+      "name": "Get Elevation Tool",
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        -2752,
+        800
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://overpass-api.de/api/interpreter?data=[out:json][timeout:25];(node[place~\"city|town\"](around:50000,{{ $fromAI('latitude','The site latitude coordinate','number') }},{{ $fromAI('longitude','The site longitude coordinate','number') }}););out body 20;",
+        "options": {}
+      },
+      "id": "3952e773-01fd-4b10-bcee-d39877f29cd1",
+      "name": "Get Nearby Context Tool",
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        -2512,
+        800
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Gather site intelligence for this smart-city project.\n\nCoordinates: latitude={{ $('Project Input').first().json.latitude }}, longitude={{ $('Project Input').first().json.longitude }}\n\nYou MUST call ALL THREE tools:\n1. Get Weather Tool — pass latitude and longitude from above\n2. Get Elevation Tool — pass latitude and longitude from above\n3. Get Nearby Context Tool — pass latitude and longitude from above\n\nAfter calling all three tools, return a single JSON object with exactly these keys:\n{\n  \"weather\": <full response from Get Weather Tool>,\n  \"elevation\": <full response from Get Elevation Tool>,\n  \"nearby\": <full response from Get Nearby Context Tool>\n}",
+        "options": {
+          "systemMessage": "You are the Site Data Collector Agent in a smart-city planning pipeline. Your only job is to call your three tools (Get Weather Tool, Get Elevation Tool, Get Nearby Context Tool) using the coordinates provided in the user message, then return the combined results as a JSON object with keys: weather, elevation, nearby. Always call all three tools. Never skip any. Never make up data.",
+          "maxIterations": 10
+        }
+      },
+      "id": "9050f0b0-d21c-4ca9-a30c-54611068d0cd",
+      "name": "Site Data Collector Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -2752,
+        1040
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Build Site Data": {
+      "main": [
+        [
+          {
+            "node": "Mistral: Location & Terrain Agent",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Mistral: Regulation Agent",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Mistral: Population & Economy Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mistral: Location & Terrain Agent": {
+      "main": [
+        [
+          {
+            "node": "Parse Location Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mistral: Regulation Agent": {
+      "main": [
+        [
+          {
+            "node": "Parse Regulation Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mistral: Population & Economy Agent": {
+      "main": [
+        [
+          {
+            "node": "Parse Population Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Location Report": {
+      "main": [
+        [
+          {
+            "node": "Merge World Inputs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Regulation Report": {
+      "main": [
+        [
+          {
+            "node": "Merge World Inputs",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Parse Population Report": {
+      "main": [
+        [
+          {
+            "node": "Merge World Inputs",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Assemble World Model": {
+      "main": [
+        [
+          {
+            "node": "Mistral: Builder Agent V1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mistral: Builder Agent V1": {
+      "main": [
+        [
+          {
+            "node": "Parse Builder Plan V1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Builder Plan V1": {
+      "main": [
+        [
+          {
+            "node": "Mistral: Fire & Safety Validator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mistral: Fire & Safety Validator": {
+      "main": [
+        [
+          {
+            "node": "Parse Fire & Safety Validator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mistral: Traffic & Roads Validator": {
+      "main": [
+        [
+          {
+            "node": "Parse Traffic & Roads Validator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mistral: Environmental Validator": {
+      "main": [
+        [
+          {
+            "node": "Parse Environmental Validator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mistral: Infrastructure Validator": {
+      "main": [
+        [
+          {
+            "node": "Parse Infrastructure Validator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mistral: Accessibility & Social Validator": {
+      "main": [
+        [
+          {
+            "node": "Parse Accessibility & Social Validator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Fire & Safety Validator": {
+      "main": [
+        [
+          {
+            "node": "Mistral: Traffic & Roads Validator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Traffic & Roads Validator": {
+      "main": [
+        [
+          {
+            "node": "Mistral: Environmental Validator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Environmental Validator": {
+      "main": [
+        [
+          {
+            "node": "Mistral: Infrastructure Validator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Infrastructure Validator": {
+      "main": [
+        [
+          {
+            "node": "Mistral: Accessibility & Social Validator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Accessibility & Social Validator": {
+      "main": [
+        [
+          {
+            "node": "Master Validator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Master Validator": {
+      "main": [
+        [
+          {
+            "node": "IF: Is Compliant",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Is Compliant": {
+      "main": [
+        [
+          {
+            "node": "Use V1 Plan",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mistral: Builder Revision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mistral: Builder Revision": {
+      "main": [
+        [
+          {
+            "node": "Parse Builder Revision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Builder Revision": {
+      "main": [
+        [
+          {
+            "node": "Use Revised Plan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Use V1 Plan": {
+      "main": [
+        [
+          {
+            "node": "Mistral: 2D Plan Generator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Use Revised Plan": {
+      "main": [
+        [
+          {
+            "node": "Mistral: 2D Plan Generator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mistral: 2D Plan Generator": {
+      "main": [
+        [
+          {
+            "node": "Parse 2D Plan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse 2D Plan": {
+      "main": [
+        [
+          {
+            "node": "Mistral: 3D Massing Generator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mistral: 3D Massing Generator": {
+      "main": [
+        [
+          {
+            "node": "Parse 3D Massing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse 3D Massing": {
+      "main": [
+        [
+          {
+            "node": "Mistral: Financial Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mistral: Financial Agent": {
+      "main": [
+        [
+          {
+            "node": "Parse Financial Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Financial Report": {
+      "main": [
+        [
+          {
+            "node": "Final Master Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge World Inputs": {
+      "main": [
+        [
+          {
+            "node": "Assemble World Model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Project Form": {
+      "main": [
+        [
+          {
+            "node": "Project Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Final Master Report": {
+      "main": [
+        [
+          {
+            "node": "Build Report Page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Report Page": {
+      "main": [
+        [
+          {
+            "node": "Show Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Project Input": {
+      "main": [
+        [
+          {
+            "node": "Site Data Collector Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Site Data Collector Agent": {
+      "main": [
+        [
+          {
+            "node": "Build Site Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mistral: Site Data Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Site Data Collector Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Weather Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Site Data Collector Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Elevation Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Site Data Collector Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Nearby Context Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Site Data Collector Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  },
+  "versionId": "a7ec58e3-075e-4f28-893b-f1575da3db9b",
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp",
+    "instanceId": "97add53562198ef82e57864679d94f82b1e66b3141e63465471b3dbcf579b463"
+  },
+  "nodeGroups": [],
+  "id": "1zFGNvz3aEKR1ber",
+  "tags": []
+}
