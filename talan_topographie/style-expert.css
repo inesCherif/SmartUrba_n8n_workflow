@@ -1,0 +1,19 @@
+.expert-heading {
+    color: #a78bfa !important;
+    margin-top: 20px !important;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    padding-top: 16px;
+}
+
+.expert-list li {
+    font-size: 0.85rem !important;
+    color: #cbd5e1 !important;
+    background: rgba(139, 92, 246, 0.1);
+    padding: 8px 12px;
+    border-radius: 8px;
+    border-left: 3px solid #8b5cf6;
+}
+
+.expert-list li::before {
+    display: none; /* Hide the default bullet */
+}

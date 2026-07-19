@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Urbain | Urban & Infrastructure Intelligence</title>
+    <meta name="description" content="AI Urban & Infrastructure Intelligence Assistant">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+     crossorigin=""/>
+
+    <!-- Leaflet Geoman CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/@geoman-io/leaflet-geoman-free@latest/dist/leaflet-geoman.css" />
+
+    <!-- html2canvas for map screenshot -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <!-- Three.js for generative 3D terrain -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="dashboard-layout">
+        <!-- Left Sidebar -->
+        <aside class="sidebar-left">
+            <div class="logo">
+                <i class="ph ph-buildings"></i>
+                <div>
+                    <h2>AI Urbain</h2>
+                    <p>Urban & Infrastructure Intelligence</p>
+                </div>
+            </div>
+            
+            <nav class="sidebar-menu">
+                <p class="menu-label">VIEWS</p>
+                <a href="#" class="menu-item active" id="menu-map">
+                    <i class="ph ph-map-trifold"></i> Map
+                </a>
+                <a href="#" class="menu-item" id="menu-3d">
+                    <i class="ph ph-cube"></i> 3D Simulation
+                </a>
+                <a href="#" class="menu-item" id="menu-2d">
+                    <i class="ph ph-squares-four"></i> 2D Simulation
+                </a>
+                <a href="#" class="menu-item" id="menu-report">
+                    <i class="ph ph-file-text"></i> Report
+                </a>
+                
+                <a href="#" class="menu-item mt-auto">
+                    <i class="ph ph-gear"></i> Settings
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Center Main Area -->
+        <main class="main-content">
+            <!-- Map View -->
+            <div class="view-container active" id="view-map">
+                <div class="map-container-wrapper">
+                    <div class="search-bar">
+                        <i class="ph ph-magnifying-glass"></i>
+                        <input type="text" id="map-search-input" placeholder="Search location (e.g. Restaurants in Paris)...">
+                    </div>
+                    <div id="map"></div>
+                </div>
+            </div>
+
+            <!-- 3D Simulation View -->
+            <div class="view-container" id="view-3d" style="display: none;">
+                <div class="view-header">
+                    <h2>3D Simulation</h2>
+                    <p>Interactive generative 3D environments based on map data.</p>
+                </div>
+                <div class="view-content" id="3d-simulation-content">
+                    <div class="empty-state">
+                        <i class="ph ph-cube"></i>
+                        <p>No 3D simulation generated yet. Ask AI Urbain to generate one.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2D Simulation View -->
+            <div class="view-container" id="view-2d" style="display: none;">
+                <div class="view-header">
+                    <h2>2D Simulation</h2>
+                    <p>Zoning, land use, and infrastructure overlays.</p>
+                </div>
+                <div class="view-content">
+                    <div class="empty-state">
+                        <i class="ph ph-squares-four"></i>
+                        <p>No 2D simulation generated yet. Ask AI Urbain to generate one.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Report View -->
+            <div class="view-container" id="view-report" style="display: none;">
+                <div class="view-header">
+                    <h2>Analysis Report</h2>
+                    <p>Comprehensive text and data analysis of the selected area.</p>
+                </div>
+                <div class="view-content">
+                    <div class="empty-state">
+                        <i class="ph ph-file-text"></i>
+                        <p>No report generated yet. Ask AI Urbain to analyze an area.</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Right Sidebar (Chat) -->
+        <aside class="sidebar-right">
+            <header class="chat-header">
+                <div class="header-icons">
+                    <button class="icon-btn"><i class="ph ph-question"></i></button>
+                    <button class="icon-btn notification-btn">
+                        <i class="ph ph-bell"></i>
+                        <span class="badge">2</span>
+                    </button>
+                    <div class="avatar user-avatar-small">JD</div>
+                </div>
+            </header>
+            
+            <div class="chat-title">
+                <div class="ai-icon-large">
+                    <i class="ph-fill ph-magic-wand"></i>
+                </div>
+                <div class="chat-title-text">
+                    <h2>AI Urbain</h2>
+                    <p>AI Urban & Infrastructure Assistant</p>
+                </div>
+                <div class="chat-title-actions">
+                    <button class="icon-btn"><i class="ph ph-dots-three-vertical"></i></button>
+                    <button class="icon-btn"><i class="ph ph-minus"></i></button>
+                </div>
+            </div>
+            
+            <div class="chat-messages" id="chat-messages">
+                <!-- Initial Assistant Message -->
+                <div class="message-wrapper assistant">
+                    <div class="avatar ai-avatar"><i class="ph-fill ph-magic-wand"></i></div>
+                    <div class="message">
+                        <div class="bubble">
+                            <p>Hello! I'm AI Urbain, your urban and infrastructure intelligence assistant.</p>
+                            <p>I can analyze an area and generate:</p>
+                            <ul>
+                                <li>3D Simulation</li>
+                                <li>2D Simulation</li>
+                                <li>Comprehensive Reports</li>
+                            </ul>
+                            <p>How can I help you today?</p>
+                        </div>
+                        <span class="time">10:30 AM</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="chat-input-area" style="position: relative;">
+                <div class="chat-input-wrapper">
+                    <button class="attach-btn" id="toggle-pipeline-btn" title="Open AI Pipeline Form"><i class="ph ph-tree-structure" style="color: #3b82f6;"></i></button>
+                    <button class="attach-btn"><i class="ph ph-paperclip"></i></button>
+                    <input type="text" id="chat-input" placeholder="Ask AI Urbain anything...">
+                    <button class="send-btn" id="chat-send-btn">
+                        <i class="ph-fill ph-paper-plane-right"></i>
+                    </button>
+                </div>
+                <p class="disclaimer">AI Urbain can make mistakes. Please verify important information.</p>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Hidden containers for AI workflows -->
+    <div id="screenshot-section" style="display:none;"></div>
+    <img id="screenshot-img" src="" alt="Captured map area" style="display:none;"/>
+    <div id="ai-loading" style="display:none;"></div>
+    <div id="ai-content" style="display:none;"></div>
+
+    <!-- AI Pipeline Form Modal -->
+    <div id="ai-pipeline-modal" class="modal-overlay" style="display:none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Generate Smart City Plan</h3>
+                <button id="close-modal-btn" class="icon-btn"><i class="ph ph-x"></i></button>
+            </div>
+            <div class="modal-body">
+                <p class="modal-desc">Area coordinates and dimensions are automatically captured from your drawn polygon. Please provide the remaining project parameters.</p>
+                <form id="n8n-pipeline-form">
+                    <div class="form-group">
+                        <label>Region Name</label>
+                        <input type="text" id="n8n-region" placeholder="e.g. Paris, France" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Population Estimate</label>
+                        <input type="number" id="n8n-population" placeholder="e.g. 15000" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Budget (USD)</label>
+                        <input type="number" id="n8n-budget" placeholder="e.g. 50000000" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Notes (Optional)</label>
+                        <textarea id="n8n-notes" placeholder="Any specific requirements..."></textarea>
+                    </div>
+                    <button type="submit" class="primary-btn" id="n8n-submit-btn">Run AI Pipeline (n8n)</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+     crossorigin=""></script>
+    
+    <!-- Leaflet Geoman JS -->
+    <script src="https://unpkg.com/@geoman-io/leaflet-geoman-free@latest/dist/leaflet-geoman.min.js"></script>
+
+    <script src="script.js"></script>
+</body>
+</html>
